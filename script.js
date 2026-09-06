@@ -56,6 +56,7 @@ let isLoadingMore = false;
 let currentSearchToken = "";
 let randomQueryIndex = 0;
 let pendingPlayIndex = null;
+let shufflePlayedIndices = new Set();
 
 function applyTheme(theme) {
     const nextTheme = THEMES.has(theme) ? theme : "default";
@@ -803,10 +804,25 @@ async function loadMore() {
 
 function toggleShuffle() {
     if (!displayList.length) return;
+    shufflePlayedIndices.clear();
     displayList = displayList.slice().sort(() => Math.random() - 0.5);
     tracks = displayList.slice();
+    shufflePlayedIndices.add(0);
     renderCards(displayList);
     loadTrack(0, true);
+}
+
+function getNextShuffleIndex() {
+    if (!tracks.length) return 0;
+    if (shufflePlayedIndices.size >= tracks.length) {
+        shufflePlayedIndices.clear();
+    }
+    let idx;
+    do {
+        idx = Math.floor(Math.random() * tracks.length);
+    } while (shufflePlayedIndices.has(idx) && shufflePlayedIndices.size < tracks.length);
+    shufflePlayedIndices.add(idx);
+    return idx;
 }
 
 function toggleRepeat() {
@@ -1137,24 +1153,13 @@ contextMenu.addEventListener("click", (e) => {
     contextMenu.classList.remove("open");
 });
 
-// ===== AUTENTICACAO =====
-const USERS_KEY = "camadaplay:users_v1";
+// ===== AUTENTICACAO (Backend API) =====
 const SESSION_KEY = "camadaplay:session_v1";
-
-function getUsers() {
-    try {
-        return JSON.parse(localStorage.getItem(USERS_KEY)) || {};
-    } catch { return {}; }
-}
-
-function saveUsers(users) {
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
+const TOKEN_KEY = "camadaplay:token_v1";
 
 function getSession() {
-    try {
-        return JSON.parse(localStorage.getItem(SESSION_KEY)) || null;
-    } catch { return null; }
+    try { return JSON.parse(localStorage.getItem(SESSION_KEY)) || null; }
+    catch { return null; }
 }
 
 function saveSession(user) {
@@ -1163,18 +1168,49 @@ function saveSession(user) {
 
 function clearSession() {
     localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(TOKEN_KEY);
 }
 
-function getUserHistoryKey(username) {
-    return `camadaplay:history_${username}_v1`;
+function getAuthToken() {
+    return localStorage.getItem(TOKEN_KEY);
 }
 
-function getUserFavoritesKey(username) {
-    return `camadaplay:favorites_${username}_v1`;
+function setAuthToken(token) {
+    localStorage.setItem(TOKEN_KEY, token);
 }
 
-function getUserSearchHistoryKey(username) {
-    return `camadaplay:search_${username}_v1`;
+async function apiRegister(username, password) {
+    const res = await fetch(`${API_BASE}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    setAuthToken(data.token);
+    return data;
+}
+
+async function apiLogin(username, password) {
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    setAuthToken(data.token);
+    return data;
+}
+
+async function apiUpdateProfile(photo) {
+    const token = getAuthToken();
+    if (!token) return;
+    await fetch(`${API_BASE}/api/auth/profile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ photo })
+    });
 }
 
 const profileBtn = document.getElementById("profileBtn");
@@ -1240,9 +1276,7 @@ function updateProfileUI() {
 
 function renderProfileStats() {
     if (!currentUser) return;
-    const historyKey = getUserHistoryKey(currentUser.username);
-    let history = [];
-    try { history = JSON.parse(localStorage.getItem(historyKey)) || []; } catch {}
+    const history = getHistory();
 
     const totalPlays = history.reduce((sum, h) => sum + (h.count || 1), 0);
     statTotalPlays.textContent = totalPlays;
@@ -1303,55 +1337,28 @@ goToLogin.addEventListener("click", () => {
 authGuest.addEventListener("click", closeAuthModal);
 authGuest2.addEventListener("click", closeAuthModal);
 
-loginForm.addEventListener("submit", (e) => {
+loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const username = document.getElementById("loginUser").value.trim();
     const password = document.getElementById("loginPass").value;
-    const users = getUsers();
 
-    if (!users[username]) {
-        loginError.textContent = "Usuario nao encontrado.";
-        return;
+    try {
+        const data = await apiLogin(username, password);
+        currentUser = { username: data.username, photo: data.photo };
+        saveSession(currentUser);
+        updateProfileUI();
+        showScreen(profileScreen);
+        resetPlayer();
+    } catch (err) {
+        loginError.textContent = err.message;
     }
-    if (users[username].password !== password) {
-        loginError.textContent = "Senha incorreta.";
-        return;
-    }
-
-    currentUser = { username, photo: users[username].photo || null };
-    saveSession(currentUser);
-    updateProfileUI();
-    showScreen(profileScreen);
-
-    // Migrar historico global se usuario novo
-    const userKey = getUserHistoryKey(currentUser.username);
-    let userHistory = [];
-    try { userHistory = JSON.parse(localStorage.getItem(userKey)) || []; } catch {}
-    if (userHistory.length === 0) {
-        const globalHistory = _originalGetHistory();
-        if (globalHistory.length > 0) {
-            localStorage.setItem(userKey, JSON.stringify(globalHistory));
-        }
-    }
-
-    // Limpar e recarregar com dados do usuario
-    displayList = [];
-    tracks = [];
-    currentTrack = 0;
-    playing = false;
-    setPlayState(false);
-    renderPlayer();
-    renderCards([]);
-    renderQueue();
-    loadView(getRandomQuery());
 });
 
-registerForm.addEventListener("submit", (e) => {
+registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const username = document.getElementById("regUser").value.trim();
     const password = document.getElementById("regPass").value;
     const confirm = document.getElementById("regPassConfirm").value;
-    const users = getUsers();
 
     if (username.length < 3) {
         registerError.textContent = "Username precisa de pelo menos 3 caracteres.";
@@ -1365,39 +1372,17 @@ registerForm.addEventListener("submit", (e) => {
         registerError.textContent = "As senhas nao conferem.";
         return;
     }
-    if (users[username]) {
-        registerError.textContent = "Esse username ja existe.";
-        return;
+
+    try {
+        const data = await apiRegister(username, password);
+        currentUser = { username: data.username, photo: data.photo };
+        saveSession(currentUser);
+        updateProfileUI();
+        showScreen(profileScreen);
+        resetPlayer();
+    } catch (err) {
+        registerError.textContent = err.message;
     }
-
-    users[username] = { password, photo: null, createdAt: Date.now() };
-    saveUsers(users);
-    currentUser = { username, photo: null };
-    saveSession(currentUser);
-    updateProfileUI();
-    showScreen(profileScreen);
-
-    // Migrar historico global para novo usuario
-    const userKey = getUserHistoryKey(currentUser.username);
-    let userHistory = [];
-    try { userHistory = JSON.parse(localStorage.getItem(userKey)) || []; } catch {}
-    if (userHistory.length === 0) {
-        const globalHistory = _originalGetHistory();
-        if (globalHistory.length > 0) {
-            localStorage.setItem(userKey, JSON.stringify(globalHistory));
-        }
-    }
-
-    // Limpar e recarregar com dados do usuario
-    displayList = [];
-    tracks = [];
-    currentTrack = 0;
-    playing = false;
-    setPlayState(false);
-    renderPlayer();
-    renderCards([]);
-    renderQueue();
-    loadView(getRandomQuery());
 });
 
 logoutBtn.addEventListener("click", () => {
@@ -1426,98 +1411,22 @@ profilePhotoInput.addEventListener("change", (e) => {
         const dataUrl = ev.target.result;
         currentUser.photo = dataUrl;
         saveSession(currentUser);
-        const users = getUsers();
-        if (users[currentUser.username]) {
-            users[currentUser.username].photo = dataUrl;
-            saveUsers(users);
-        }
+        apiUpdateProfile(dataUrl);
         updateProfileUI();
     };
     reader.readAsDataURL(file);
 });
 
-const _originalRecordPlay = recordPlay;
-recordPlay = function(track) {
-    if (currentUser) {
-        const userKey = getUserHistoryKey(currentUser.username);
-        let history = [];
-        try { history = JSON.parse(localStorage.getItem(userKey)) || []; } catch {}
-        const existing = history.find(h => String(h.id) === String(track.id));
-        if (existing) {
-            existing.count = (existing.count || 0) + 1;
-            existing.lastPlayed = Date.now();
-        } else {
-            history.push({ id: track.id, title: track.title, artist: track.artist, count: 1, lastPlayed: Date.now() });
-        }
-        localStorage.setItem(userKey, JSON.stringify(history));
-    } else {
-        _originalRecordPlay(track);
-    }
-};
-
-const _originalGetHistory = getHistory;
-getHistory = function() {
-    if (currentUser) {
-        const userKey = getUserHistoryKey(currentUser.username);
-        try {
-            return JSON.parse(localStorage.getItem(userKey)) || [];
-        } catch { return []; }
-    }
-    return _originalGetHistory();
-};
-
-const _originalGetFavorites = getFavorites;
-getFavorites = function() {
-    if (currentUser) {
-        const userKey = getUserFavoritesKey(currentUser.username);
-        try {
-            return JSON.parse(localStorage.getItem(userKey)) || [];
-        } catch { return []; }
-    }
-    return _originalGetFavorites();
-};
-
-const _originalSaveFavorites = saveFavorites;
-saveFavorites = function(list) {
-    if (currentUser) {
-        const userKey = getUserFavoritesKey(currentUser.username);
-        localStorage.setItem(userKey, JSON.stringify(list));
-    } else {
-        _originalSaveFavorites(list);
-    }
-};
-
-const _originalGetSearchHistory = getSearchHistory;
-getSearchHistory = function() {
-    if (currentUser) {
-        const userKey = getUserSearchHistoryKey(currentUser.username);
-        try {
-            return JSON.parse(localStorage.getItem(userKey)) || [];
-        } catch { return []; }
-    }
-    return _originalGetSearchHistory();
-};
-
-const _originalRecordSearch = recordSearch;
-recordSearch = function(query) {
-    if (currentUser) {
-        if (!query || !query.trim()) return;
-        const userKey = getUserSearchHistoryKey(currentUser.username);
-        let history = [];
-        try { history = JSON.parse(localStorage.getItem(userKey)) || []; } catch {}
-        const term = query.trim().toLowerCase();
-        const existing = history.find(item => item.term === term);
-        if (existing) {
-            existing.count = (existing.count || 0) + 1;
-            existing.lastSearched = Date.now();
-        } else {
-            history.push({ term, count: 1, lastSearched: Date.now() });
-        }
-        const trimmed = history.sort((a, b) => b.lastSearched - a.lastSearched).slice(0, 20);
-        localStorage.setItem(userKey, JSON.stringify(trimmed));
-    } else {
-        _originalRecordSearch(query);
-    }
-};
+function resetPlayer() {
+    displayList = [];
+    tracks = [];
+    currentTrack = 0;
+    playing = false;
+    setPlayState(false);
+    renderPlayer();
+    renderCards([]);
+    renderQueue();
+    loadView(getRandomQuery());
+}
 
 updateProfileUI();

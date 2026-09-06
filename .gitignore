@@ -1,5 +1,8 @@
 node_modules/
 .env
+.cache/
+.users.json
+.playlists.json
 abrir_camadaplay.bat
 *.log
 .DS_Store
