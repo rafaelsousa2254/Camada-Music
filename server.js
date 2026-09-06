@@ -287,30 +287,59 @@ app.get('/api/recommend', async (req, res) => {
     const artists = req.query.artists;
     const titles = req.query.titles;
     const searches = req.query.searches;
+    const categories = req.query.categories;
+    const seeds = req.query.seeds;
     const limit = parseInt(req.query.limit, 10) || 12;
 
-    console.log(`[RECOMMEND] artists: "${artists}", titles: "${titles}", searches: "${searches}"`);
+    console.log(`[RECOMMEND] artists: "${artists}", titles: "${titles}", searches: "${searches}", categories: "${categories}", seeds: "${seeds}"`);
 
     try {
         let queries = [];
+        const addQuery = (query) => {
+            const clean = String(query || '').trim();
+            if (clean && !queries.includes(clean)) queries.push(clean);
+        };
+
+        if (categories) {
+            categories.split(',').filter(Boolean).slice(0, 4).forEach(category => {
+                const name = category.trim();
+                addQuery(`${name} musicas mais tocadas`);
+                addQuery(`${name} playlist atualizada`);
+                addQuery(`${name} hits`);
+            });
+        }
+
         if (artists) {
-            artists.split(',').filter(Boolean).slice(0, 3).forEach(artist => {
+            artists.split(',').filter(Boolean).slice(0, 5).forEach(artist => {
                 const name = artist.trim();
-                queries.push(`${name} music video official`);
-                queries.push(`${name} playlist`);
+                addQuery(`${name} melhores musicas`);
+                addQuery(`${name} musicas parecidas`);
+                addQuery(`${name} playlist`);
             });
         }
+
         if (titles) {
-            titles.split(',').filter(Boolean).slice(0, 3).forEach(title => {
-                queries.push(`${title.trim()} official video`);
+            titles.split(',').filter(Boolean).slice(0, 4).forEach(title => {
+                const name = title.trim();
+                addQuery(`${name} musicas parecidas`);
+                addQuery(`${name} radio`);
             });
         }
+
         if (searches) {
-            searches.split(',').filter(Boolean).slice(0, 3).forEach(search => {
-                queries.push(`${search.trim()} music hits`);
-                queries.push(`${search.trim()} top music`);
+            searches.split(',').filter(Boolean).slice(0, 5).forEach(search => {
+                const name = search.trim();
+                addQuery(`${name} musicas`);
+                addQuery(`${name} playlist`);
             });
         }
+
+        if (seeds) {
+            seeds.split(',').filter(Boolean).slice(0, 6).forEach(seed => {
+                addQuery(`${seed.trim()} music`);
+            });
+        }
+
         if (queries.length === 0) {
             queries = ['music hits 2024', 'top music today', 'new music release'];
         }
@@ -326,6 +355,7 @@ app.get('/api/recommend', async (req, res) => {
                     if (!seenIds.has(item.id)) {
                         seenIds.add(item.id);
                         allResults.push(item);
+                        if (allResults.length >= limit) break;
                     }
                 }
             } catch (e) {

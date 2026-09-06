@@ -1354,6 +1354,10 @@ svg {
     gap: 18px;
 }
 
+.mobile-progress {
+    display: none;
+}
+
 .volume {
     display: flex;
     align-items: center;
@@ -1478,10 +1482,20 @@ svg {
         letter-spacing: 1.6px;
     }
 
+    .brand > span:last-child {
+        display: grid;
+        line-height: .92;
+    }
+
+    .brand > span:last-child > span {
+        display: block;
+        padding-left: 38px;
+    }
+
     .brand-mark,
     .brand-mark-icon {
-        width: 28px;
-        height: 28px;
+        width: 26px;
+        height: 26px;
     }
 
     .menu {
@@ -1500,16 +1514,18 @@ svg {
     .menu-item {
         flex: 0 0 auto;
         width: auto;
-        min-height: 42px;
-        gap: 10px;
-        padding: 0 14px;
+        min-height: 34px;
+        gap: 7px;
+        padding: 0 10px;
+        border-radius: 7px;
+        font-size: .82rem;
         white-space: nowrap;
     }
 
     .menu-item .menu-icon-neon,
     .menu-item svg {
-        width: 20px;
-        height: 20px;
+        width: 16px;
+        height: 16px;
     }
 
     .playlist-block,
@@ -1601,8 +1617,8 @@ svg {
     .player {
         grid-template-columns: 1fr auto;
         gap: 10px;
-        min-height: 72px;
-        padding: 8px 10px;
+        min-height: 98px;
+        padding: 8px 10px 10px;
         border-radius: 0;
     }
 
@@ -1640,6 +1656,25 @@ svg {
     .bottom-controls .play-button {
         width: 54px;
         height: 54px;
+    }
+
+    .mobile-progress {
+        display: grid;
+        grid-column: 1 / -1;
+        gap: 4px;
+        width: 100%;
+    }
+
+    .mobile-progress input {
+        width: 100%;
+        accent-color: var(--blue);
+    }
+
+    .mobile-progress div {
+        display: flex;
+        justify-content: space-between;
+        color: var(--muted);
+        font-size: .72rem;
     }
 
     .bottom-tools {

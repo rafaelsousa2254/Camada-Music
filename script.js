@@ -22,8 +22,11 @@ const menuItems = document.querySelectorAll(".menu-item");
 const playlistItems = document.querySelectorAll(".playlist-item");
 const volumeControl = document.querySelector("#volumeControl");
 const sideProgressControl = document.querySelector("#sideProgressControl");
+const mobileProgressControl = document.querySelector("#mobileProgressControl");
 const sideCurrentTime = document.querySelector("#sideCurrentTime");
 const sideDurationTime = document.querySelector("#sideDurationTime");
+const mobileCurrentTime = document.querySelector("#mobileCurrentTime");
+const mobileDurationTime = document.querySelector("#mobileDurationTime");
 const shuffleButtons = [document.querySelector("#shuffleTrack"), document.querySelector("#bottomShuffle")];
 const repeatButtons = [document.querySelector("#repeatTrack"), document.querySelector("#bottomRepeat")];
 const viewTitle = document.querySelector("#viewTitle");
@@ -40,6 +43,20 @@ const SEARCH_HISTORY_KEY = "camadaplay:pesquisas_v1";
 const THEME_KEY = "camadaplay:theme_v1";
 const COVER_CLASSES = ["cover-one", "cover-two", "cover-three", "cover-four"];
 const THEMES = new Set(["default", "anos80", "ashley-graves", "asta", "coco-atelier", "cyberpunk", "demon-slayer", "frieren", "hacker", "hello-kitty", "japao", "naruto", "sakura", "sono-bisque-doll", "suzuki"]);
+const CATEGORY_KEYWORDS = [
+    { name: "funk brasileiro", terms: ["funk", "funk brasileiro", "mc ", "dj ", "mandela", "automotivo", "tamborzao", "brega funk"] },
+    { name: "sertanejo", terms: ["sertanejo", "arrocha", "modao", "sofrencia", "ana castela", "gusttavo lima", "luan santana", "henrique", "juliano", "jorge e mateus"] },
+    { name: "trap", terms: ["trap", "travis scott", "future", "playboi carti", "lil ", "matuê", "matue", "teto", "wiu"] },
+    { name: "rap hip hop", terms: ["rap", "hip hop", "racionais", "emicida", "kendrick", "drake", "kanye", "sabota", "bk'", "djonga"] },
+    { name: "pop", terms: ["pop", "billie eilish", "billie elish", "taylor swift", "dua lipa", "ariana grande", "bruno mars", "maroon 5", "the weeknd"] },
+    { name: "rock", terms: ["rock", "metal", "linkin park", "nirvana", "foo fighters", "arctic monkeys", "system of a down", "queen"] },
+    { name: "eletronica", terms: ["eletronica", "electronic", "edm", "house", "techno", "phonk", "alan walker", "calvin harris", "marshmello"] },
+    { name: "k-pop", terms: ["k-pop", "kpop", "bts", "blackpink", "stray kids", "newjeans", "twice"] },
+    { name: "anime", terms: ["anime", "opening", "ost", "j-pop", "jpop", "naruto", "demon slayer", "kimetsu", "one piece", "jujutsu"] },
+    { name: "mpb", terms: ["mpb", "bossa nova", "tom jobim", "caetano", "gilberto gil", "chico buarque", "liniker", "seu jorge"] },
+    { name: "pagode samba", terms: ["pagode", "samba", "ferrugem", "thiaguinho", "sorriso maroto", "exaltasamba"] },
+    { name: "lo-fi chill", terms: ["lofi", "lo-fi", "chill", "relax", "ambient", "study", "sleep"] }
+];
 
 let displayList = [];
 let tracks = [];
@@ -60,6 +77,21 @@ let shufflePlayedIndices = new Set();
 
 function isMobileLayout() {
     return window.matchMedia("(max-width: 860px)").matches;
+}
+
+function scopedStorageKey(baseKey) {
+    const username = currentUser && currentUser.username ? currentUser.username : "guest";
+    return `${baseKey}:${username.toLowerCase()}`;
+}
+
+function migrateStorageToCurrentProfile() {
+    if (!currentUser || !currentUser.username) return;
+    [FAVORITES_KEY, HISTORY_KEY, SEARCH_HISTORY_KEY].forEach((baseKey) => {
+        const profileKey = scopedStorageKey(baseKey);
+        if (!localStorage.getItem(profileKey) && localStorage.getItem(baseKey)) {
+            localStorage.setItem(profileKey, localStorage.getItem(baseKey));
+        }
+    });
 }
 
 function applyTheme(theme) {
@@ -259,7 +291,7 @@ function heartIcon(filled) {
 
 function getFavorites() {
     try {
-        const saved = JSON.parse(localStorage.getItem(FAVORITES_KEY));
+        const saved = JSON.parse(localStorage.getItem(scopedStorageKey(FAVORITES_KEY)));
         return Array.isArray(saved) ? saved : [];
     } catch {
         return [];
@@ -267,7 +299,7 @@ function getFavorites() {
 }
 
 function saveFavorites(list) {
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify(list));
+    localStorage.setItem(scopedStorageKey(FAVORITES_KEY), JSON.stringify(list));
 }
 
 function isFavorite(id) {
@@ -289,7 +321,7 @@ function toggleFavorite(track) {
 // ===== HISTORICO =====
 function getHistory() {
     try {
-        const saved = JSON.parse(localStorage.getItem(HISTORY_KEY));
+        const saved = JSON.parse(localStorage.getItem(scopedStorageKey(HISTORY_KEY)));
         return Array.isArray(saved) ? saved : [];
     } catch {
         return [];
@@ -297,13 +329,13 @@ function getHistory() {
 }
 
 function saveHistory(list) {
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+    localStorage.setItem(scopedStorageKey(HISTORY_KEY), JSON.stringify(list));
 }
 
 // ===== HISTORICO DE PESQUISAS =====
 function getSearchHistory() {
     try {
-        const saved = JSON.parse(localStorage.getItem(SEARCH_HISTORY_KEY));
+        const saved = JSON.parse(localStorage.getItem(scopedStorageKey(SEARCH_HISTORY_KEY)));
         return Array.isArray(saved) ? saved : [];
     } catch {
         return [];
@@ -323,7 +355,7 @@ function recordSearch(query) {
     }
     // Manter apenas as 20 pesquisas mais recentes
     const trimmed = history.sort((a, b) => b.lastSearched - a.lastSearched).slice(0, 20);
-    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(trimmed));
+    localStorage.setItem(scopedStorageKey(SEARCH_HISTORY_KEY), JSON.stringify(trimmed));
 }
 
 function getTopSearchTerms(limit = 5) {
@@ -379,6 +411,60 @@ function getTopTitles(limit = 5) {
         .map(([title]) => title);
 }
 
+function cleanSignalText(value) {
+    return String(value || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^\w\s'-]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function detectCategoriesFromText(text) {
+    const normalized = cleanSignalText(text);
+    return CATEGORY_KEYWORDS
+        .filter((category) => category.terms.some((term) => normalized.includes(cleanSignalText(term))))
+        .map((category) => category.name);
+}
+
+function getTopCategories(limit = 4) {
+    const categoryCounts = {};
+    getHistory().forEach((item) => {
+        const weight = item.count || 1;
+        detectCategoriesFromText(`${item.title} ${item.artist}`).forEach((category) => {
+            categoryCounts[category] = (categoryCounts[category] || 0) + weight;
+        });
+    });
+    getSearchHistory().forEach((item) => {
+        detectCategoriesFromText(item.term).forEach((category) => {
+            categoryCounts[category] = (categoryCounts[category] || 0) + (item.count || 1);
+        });
+    });
+    return Object.entries(categoryCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, limit)
+        .map(([category]) => category);
+}
+
+function getRecommendationSeeds(limit = 6) {
+    const ignored = new Set(["official", "video", "audio", "lyrics", "lyric", "clip", "music", "feat", "ft", "remix", "ao", "vivo", "live", "show", "full", "album"]);
+    const counts = {};
+    getHistory().forEach((item) => {
+        const weight = item.count || 1;
+        cleanSignalText(`${item.title} ${item.artist}`)
+            .split(" ")
+            .filter((word) => word.length > 2 && !ignored.has(word))
+            .forEach((word) => {
+                counts[word] = (counts[word] || 0) + weight;
+            });
+    });
+    return Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, limit)
+        .map(([word]) => word);
+}
+
 // ===== API =====
 async function fetchSearch(query, limit = 24, pageToken = "") {
     let url = `${API_BASE}/api/search?q=${encodeURIComponent(query)}&limit=${limit}`;
@@ -416,11 +502,13 @@ async function fetchSearch(query, limit = 24, pageToken = "") {
 }
 
 async function fetchRecommendations(limit = 12) {
-    const topArtists = getTopArtists(3);
-    const topTitles = getTopTitles(3);
-    const topSearches = getTopSearchTerms(3);
-    console.log(`[RECOMMEND] Dados do usuario:`, { topArtists, topTitles, topSearches });
-    const url = `${API_BASE}/api/recommend?artists=${encodeURIComponent(topArtists.join(','))}&titles=${encodeURIComponent(topTitles.join(','))}&searches=${encodeURIComponent(topSearches.join(','))}&limit=${limit}`;
+    const topArtists = getTopArtists(5);
+    const topTitles = getTopTitles(5);
+    const topSearches = getTopSearchTerms(5);
+    const topCategories = getTopCategories(4);
+    const seeds = getRecommendationSeeds(6);
+    console.log(`[RECOMMEND] Dados do usuario:`, { topArtists, topTitles, topSearches, topCategories, seeds });
+    const url = `${API_BASE}/api/recommend?artists=${encodeURIComponent(topArtists.join(','))}&titles=${encodeURIComponent(topTitles.join(','))}&searches=${encodeURIComponent(topSearches.join(','))}&categories=${encodeURIComponent(topCategories.join(','))}&seeds=${encodeURIComponent(seeds.join(','))}&limit=${limit}`;
     console.log(`[RECOMMEND] URL completa:`, url);
 
     const response = await fetch(url);
@@ -589,6 +677,9 @@ function renderPlayer() {
         sideCurrentTime.textContent = "0:00";
         sideDurationTime.textContent = "0:00";
         sideProgressControl.value = 0;
+        mobileCurrentTime.textContent = "0:00";
+        mobileDurationTime.textContent = "0:00";
+        mobileProgressControl.value = 0;
         setPlayState(false);
         renderFavButtons(null);
         renderQueue();
@@ -600,6 +691,7 @@ function renderPlayer() {
     sideTitle.textContent = track.title;
     sideArtist.textContent = track.artist;
     sideDurationTime.textContent = formatTime(currentDuration || track.durationSeconds);
+    mobileDurationTime.textContent = formatTime(currentDuration || track.durationSeconds);
     setCoverImage(playerCover, track);
     setCoverImage(sideCover, track);
     heroCover.innerHTML = track.image ? `<img src="${escapeHtml(track.image)}" alt="">` : '';
@@ -626,6 +718,8 @@ function loadTrack(index, shouldPlay) {
     setPlayState(false);
     sideProgressControl.value = 0;
     sideCurrentTime.textContent = "0:00";
+    mobileProgressControl.value = 0;
+    mobileCurrentTime.textContent = "0:00";
     currentDuration = 0;
     renderPlayer();
 
@@ -1004,19 +1098,29 @@ setInterval(() => {
         const duration = ytPlayer.getDuration() || 0;
         currentDuration = duration;
         sideCurrentTime.textContent = formatTime(current);
+        mobileCurrentTime.textContent = formatTime(current);
         if (duration > 0) {
             sideDurationTime.textContent = formatTime(duration);
+            mobileDurationTime.textContent = formatTime(duration);
             sideProgressControl.value = String((current / duration) * 100);
+            mobileProgressControl.value = String((current / duration) * 100);
         }
     }
 }, 500);
 
-sideProgressControl.addEventListener("input", () => {
+function seekFromProgress(control) {
     if (ytReady && ytPlayer && currentDuration > 0) {
-        const seekTo = (Number(sideProgressControl.value) / 100) * currentDuration;
+        const seekTo = (Number(control.value) / 100) * currentDuration;
         ytPlayer.seekTo(seekTo, true);
+        sideProgressControl.value = control.value;
+        mobileProgressControl.value = control.value;
+        sideCurrentTime.textContent = formatTime(seekTo);
+        mobileCurrentTime.textContent = formatTime(seekTo);
     }
-});
+}
+
+sideProgressControl.addEventListener("input", () => seekFromProgress(sideProgressControl));
+mobileProgressControl.addEventListener("input", () => seekFromProgress(mobileProgressControl));
 
 volumeControl.addEventListener("input", () => {
     if (ytReady && ytPlayer) {
@@ -1252,6 +1356,7 @@ const playerEl = document.querySelector(".player");
 const appEl = document.querySelector(".app");
 
 let currentUser = getSession();
+migrateStorageToCurrentProfile();
 
 function showScreen(screen) {
     loginScreen.classList.add("hidden");
@@ -1355,6 +1460,7 @@ loginForm.addEventListener("submit", async (e) => {
         const data = await apiLogin(username, password);
         currentUser = { username: data.username, photo: data.photo };
         saveSession(currentUser);
+        migrateStorageToCurrentProfile();
         updateProfileUI();
         showScreen(profileScreen);
         resetPlayer();
@@ -1386,6 +1492,7 @@ registerForm.addEventListener("submit", async (e) => {
         const data = await apiRegister(username, password);
         currentUser = { username: data.username, photo: data.photo };
         saveSession(currentUser);
+        migrateStorageToCurrentProfile();
         updateProfileUI();
         showScreen(profileScreen);
         resetPlayer();
