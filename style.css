@@ -21,6 +21,8 @@
     --accent-2: #4ba5ff;
     --hero-image: url("https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1500&q=80");
     --hero-person-image: url("https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80");
+    --hero-position: center;
+    --hero-person-position: center;
     --hero-overlay: linear-gradient(90deg, rgba(5, 18, 51, .98), rgba(3, 38, 116, .85) 55%, rgba(2, 14, 36, .86));
     --hero-glow: radial-gradient(circle at 75% 38%, rgba(0, 119, 255, .5), transparent 30%);
     --page-bg:
@@ -45,6 +47,8 @@ body[data-theme="sakura"] {
     --accent-2: #ffb4ce;
     --hero-image: url("assets/themes/foto_sakura.png");
     --hero-person-image: url("assets/themes/foto_sakura.png");
+    --hero-position: 58% center;
+    --hero-person-position: 62% center;
     --hero-overlay: linear-gradient(90deg, rgba(115, 22, 74, .82), rgba(255, 112, 166, .32) 48%, rgba(255, 218, 235, .14));
     --hero-glow: radial-gradient(circle at 28% 20%, rgba(255, 213, 229, .72), transparent 34%);
     --page-bg: linear-gradient(135deg, #2a071b, #ff8fbd 48%, #ffd3e4);
@@ -129,6 +133,8 @@ body[data-theme="naruto"] {
     --accent-2: #ff481f;
     --hero-image: url("assets/themes/foto_naruto.png");
     --hero-person-image: url("assets/themes/foto_naruto.png");
+    --hero-position: 52% center;
+    --hero-person-position: 50% center;
     --hero-overlay: linear-gradient(90deg, rgba(31, 12, 0, .92), rgba(146, 55, 0, .42) 52%, rgba(0, 0, 0, .2));
     --hero-glow: radial-gradient(circle at 72% 36%, rgba(255, 130, 31, .54), transparent 35%);
     --page-bg: linear-gradient(135deg, #070300, #2c1000 58%, #090300);
@@ -781,7 +787,7 @@ svg {
     overflow: hidden;
     background:
         var(--hero-overlay),
-        var(--hero-image) center/cover;
+        var(--hero-image) var(--hero-position)/cover;
     box-shadow:
         inset 0 0 32px rgba(var(--accent-rgb), .12),
         0 0 24px rgba(var(--accent-rgb), .12);
@@ -841,7 +847,7 @@ svg {
     min-height: 266px;
     background:
         linear-gradient(90deg, transparent, rgba(0, 0, 0, .16)),
-        var(--hero-person-image) center/cover;
+        var(--hero-person-image) var(--hero-person-position)/cover;
     mask-image: linear-gradient(90deg, transparent, #000 16%);
 }
 
@@ -1482,16 +1488,6 @@ svg {
         letter-spacing: 1.6px;
     }
 
-    .brand > span:last-child {
-        display: grid;
-        line-height: .92;
-    }
-
-    .brand > span:last-child > span {
-        display: block;
-        padding-left: 38px;
-    }
-
     .brand-mark,
     .brand-mark-icon {
         width: 26px;
@@ -1590,6 +1586,11 @@ svg {
         overflow-wrap: anywhere;
     }
 
+    .hero h1 span {
+        display: block;
+        padding-left: 1.45em;
+    }
+
     .hero p:not(.eyebrow) {
         font-size: 1rem;
     }
@@ -1599,15 +1600,37 @@ svg {
     }
 
     .right-panel {
-        display: none;
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 18;
+        display: flex;
+        width: 100%;
+        height: min(68vh, 560px);
+        min-width: 0;
+        padding-bottom: 98px;
+        border-top: 1px solid var(--line-strong);
+        background: color-mix(in srgb, var(--panel-strong) 94%, #000 6%);
+        box-shadow: 0 -18px 54px rgba(0, 0, 0, .5);
+        transform: translateY(100%);
+        transition: transform .32s cubic-bezier(.4, 0, .2, 1);
     }
 
     .right-panel.visible {
-        display: none;
+        transform: translateY(0);
     }
 
     .side-player {
+        display: none;
         flex: 0 0 auto;
+    }
+
+    .queue {
+        flex: 1;
+        padding: 18px 12px 12px;
+        background: transparent;
+        box-shadow: none;
     }
 
     .card-row {

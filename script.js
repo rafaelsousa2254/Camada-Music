@@ -35,6 +35,9 @@ const heroText = document.querySelector("#heroText");
 const sectionTitle = document.querySelector("#sectionTitle");
 const heroVideo = document.querySelector("#heroVideo");
 const themeSelect = document.querySelector("#themeSelect");
+const rightPanel = document.querySelector(".right-panel");
+const playerEl = document.querySelector(".player");
+const appEl = document.querySelector(".app");
 
 const API_BASE = window.location.origin;
 const FAVORITES_KEY = "camadaplay:favoritos_v2";
@@ -730,6 +733,8 @@ function loadTrack(index, shouldPlay) {
         if (!isMobileLayout()) {
             rightPanel.classList.add("visible");
             appEl.classList.add("panel-open");
+        } else {
+            appEl.classList.remove("panel-open");
         }
     }
 
@@ -953,6 +958,12 @@ queueList.addEventListener("click", (event) => {
 [next, sideNext].forEach((button) => button.addEventListener("click", () => loadTrack(currentTrack + 1, true)));
 shuffleButtons.forEach((button) => button.addEventListener("click", toggleShuffle));
 repeatButtons.forEach((button) => button.addEventListener("click", toggleRepeat));
+
+playerEl.addEventListener("click", (event) => {
+    if (!isMobileLayout() || !tracks.length) return;
+    if (event.target.closest("button, input")) return;
+    rightPanel.classList.toggle("visible");
+});
 
 [favPlayer, favSide].forEach((button) => {
     button.addEventListener("click", () => {
@@ -1351,10 +1362,6 @@ const profileTopArtistsList = document.getElementById("profileTopArtistsList");
 const userIndicator = document.getElementById("userIndicator");
 const userIndicatorAvatar = document.getElementById("userIndicatorAvatar");
 const userIndicatorName = document.getElementById("userIndicatorName");
-const rightPanel = document.querySelector(".right-panel");
-const playerEl = document.querySelector(".player");
-const appEl = document.querySelector(".app");
-
 let currentUser = getSession();
 migrateStorageToCurrentProfile();
 
