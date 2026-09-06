@@ -463,6 +463,8 @@ svg {
 }
 
 .brand span span {
+    display: block;
+    padding-left: 38px;
     color: var(--blue);
 }
 
@@ -1584,11 +1586,6 @@ svg {
         font-size: clamp(2.15rem, 14vw, 3.15rem);
         line-height: 1;
         overflow-wrap: anywhere;
-    }
-
-    .hero h1 span {
-        display: block;
-        padding-left: 1.45em;
     }
 
     .hero p:not(.eyebrow) {
