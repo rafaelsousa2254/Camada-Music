@@ -39,7 +39,7 @@ const HISTORY_KEY = "camadaplay:historico_v2";
 const SEARCH_HISTORY_KEY = "camadaplay:pesquisas_v1";
 const THEME_KEY = "camadaplay:theme_v1";
 const COVER_CLASSES = ["cover-one", "cover-two", "cover-three", "cover-four"];
-const THEMES = new Set(["default", "sakura", "hacker", "cyberpunk", "japao", "naruto", "sono-bisque-doll", "hello-kitty", "anos80"]);
+const THEMES = new Set(["default", "anos80", "ashley-graves", "asta", "coco-atelier", "cyberpunk", "demon-slayer", "frieren", "hacker", "hello-kitty", "japao", "naruto", "sakura", "sono-bisque-doll", "suzuki"]);
 
 let displayList = [];
 let tracks = [];
@@ -57,6 +57,10 @@ let currentSearchToken = "";
 let randomQueryIndex = 0;
 let pendingPlayIndex = null;
 let shufflePlayedIndices = new Set();
+
+function isMobileLayout() {
+    return window.matchMedia("(max-width: 860px)").matches;
+}
 
 function applyTheme(theme) {
     const nextTheme = THEMES.has(theme) ? theme : "default";
@@ -629,8 +633,10 @@ function loadTrack(index, shouldPlay) {
         recordPlay(track);
         playerEl.classList.add("visible");
         appEl.classList.add("player-open");
-        rightPanel.classList.add("visible");
-        appEl.classList.add("panel-open");
+        if (!isMobileLayout()) {
+            rightPanel.classList.add("visible");
+            appEl.classList.add("panel-open");
+        }
     }
 
     if (!ytReady || !ytPlayer) {
@@ -642,6 +648,7 @@ function loadTrack(index, shouldPlay) {
     try {
         ytPlayer.loadVideoById(track.id);
         if (shouldPlay) {
+            ytPlayer.playVideo();
             playing = true;
             setPlayState(true);
         }
@@ -869,7 +876,8 @@ const queueArea = document.querySelector(".queue-list");
 
 function handleContentScroll() {
     if (!contentArea || isLoadingMore) return;
-    const { scrollTop, scrollHeight, clientHeight } = contentArea;
+    const scrollingElement = isMobileLayout() ? document.documentElement : contentArea;
+    const { scrollTop, scrollHeight, clientHeight } = scrollingElement;
     if (scrollHeight - scrollTop - clientHeight < 200) {
         loadMore();
     }
@@ -885,6 +893,7 @@ function handleQueueScroll() {
 
 if (contentArea) {
     contentArea.addEventListener("scroll", debounce(handleContentScroll, 200));
+    window.addEventListener("scroll", debounce(handleContentScroll, 200), { passive: true });
 }
 if (queueArea) {
     queueArea.addEventListener("scroll", debounce(handleQueueScroll, 200));
