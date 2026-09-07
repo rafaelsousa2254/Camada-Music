@@ -2291,37 +2291,3 @@ svg {
         display: flex !important;
     }
 }
-
-/* ===== NAVEGAÇÃO TV (D-pad) ===== */
-*:focus {
-    outline: 2px solid var(--blue) !important;
-    outline-offset: 3px;
-}
-
-.mix-card:focus,
-.queue-item:focus,
-.menu-item:focus,
-.playlist-item:focus {
-    background: linear-gradient(90deg, rgba(var(--accent-rgb), .34), rgba(var(--accent-rgb), .08)) !important;
-    box-shadow: 0 0 16px rgba(var(--accent-rgb), .4);
-    transform: scale(1.02);
-    transition: all .15s ease;
-    z-index: 10;
-}
-
-button:focus {
-    outline: 2px solid var(--blue) !important;
-    outline-offset: 3px;
-}
-
-.search:focus-within {
-    border-color: var(--blue) !important;
-    box-shadow: 0 0 20px rgba(var(--accent-rgb), .3);
-}
-
-/* Scroll suave para TV */
-.content,
-.sidebar,
-.queue-list {
-    scroll-behavior: smooth;
-}
