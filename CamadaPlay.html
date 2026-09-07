@@ -361,6 +361,7 @@
                     },
                     onError: function(e) {
                         console.error("[YT] Erro no player:", e.data);
+                        if (window.onYTPlayerError) window.onYTPlayerError(e);
                     }
                 }
             });

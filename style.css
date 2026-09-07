@@ -498,6 +498,37 @@ body {
     font-family: "Inter", Arial, sans-serif;
 }
 
+body.playstation-mode *,
+body.playstation-mode *::before,
+body.playstation-mode *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+}
+
+body.playstation-mode .hero-video,
+body.playstation-mode .right-panel {
+    display: none !important;
+}
+
+body.playstation-mode .app {
+    grid-template-columns: 250px minmax(0, 1fr);
+}
+
+body.playstation-mode .hero,
+body.playstation-mode .sidebar,
+body.playstation-mode .player,
+body.playstation-mode .mix-card,
+body.playstation-mode .queue,
+body.playstation-mode .side-player {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+}
+
+body.playstation-mode .hero::after {
+    display: none !important;
+}
+
 button,
 input {
     font: inherit;
@@ -1650,7 +1681,7 @@ svg {
         height: auto;
         min-height: 100vh;
         overflow: visible;
-        padding: 10px 10px 92px;
+        padding: 10px 10px 132px;
     }
 
     .app.player-open,
@@ -1866,9 +1897,9 @@ svg {
     }
 
     .player {
-        grid-template-columns: 1fr auto;
+        grid-template-columns: minmax(0, 1fr) auto;
         gap: 10px;
-        min-height: 98px;
+        min-height: 124px;
         padding: 8px 10px 10px;
         border-radius: 0;
     }
@@ -1929,7 +1960,35 @@ svg {
     }
 
     .bottom-tools {
+        display: flex;
+        grid-column: 1 / -1;
+        align-items: center;
+        justify-content: stretch;
+        gap: 0;
+        width: 100%;
+        padding: 0 2px;
+    }
+
+    .bottom-tools > button {
         display: none;
+    }
+
+    .bottom-tools .volume {
+        flex: 1;
+        gap: 8px;
+        min-width: 0;
+        padding: 2px 0;
+    }
+
+    .bottom-tools .volume svg {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+    }
+
+    .bottom-tools .volume input {
+        width: 100%;
+        min-width: 0;
     }
 }
 

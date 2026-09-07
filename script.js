@@ -65,6 +65,14 @@ const CATEGORY_KEYWORDS = [
     { name: "lo-fi chill", terms: ["lofi", "lo-fi", "chill", "relax", "ambient", "study", "sleep"] }
 ];
 
+const IS_PLAYSTATION = /PlayStation|PLAYSTATION/i.test(navigator.userAgent || "");
+const PLAYSTATION_INITIAL_LIMIT = 12;
+const PLAYSTATION_SEARCH_LIMIT = 10;
+
+if (IS_PLAYSTATION) {
+    document.body.classList.add("playstation-mode");
+}
+
 let displayList = [];
 let tracks = [];
 let currentTrack = 0;
@@ -85,6 +93,11 @@ let heroVideoId = null;
 
 function isMobileLayout() {
     return window.matchMedia("(max-width: 860px)").matches;
+}
+
+function searchLimit(defaultLimit) {
+    if (!IS_PLAYSTATION) return defaultLimit;
+    return Math.min(defaultLimit, PLAYSTATION_SEARCH_LIMIT);
 }
 
 function scopedStorageKey(baseKey) {
@@ -225,6 +238,22 @@ window.onYTPlayerReady = function(event) {
 
 window.onYTPlayerStateChange = function(event) {
     onYTStateChange(event);
+};
+
+window.onYTPlayerError = function(event) {
+    console.warn("[YT] Erro de reprodução:", event?.data);
+    playing = false;
+    setPlayState(false);
+    embedHeroVideo(null);
+
+    if (IS_PLAYSTATION && tracks.length > 1 && currentTrack < tracks.length - 1) {
+        playNextTrack();
+        return;
+    }
+
+    if (IS_PLAYSTATION) {
+        renderStatus("Essa música não abriu no navegador do PlayStation. Tente outra faixa.", "error");
+    }
 };
 
 function onYTStateChange(event) {
@@ -576,6 +605,15 @@ function embedHeroVideo(videoId, startAt = null) {
         return;
     }
     const rightBg = document.getElementById('rightPanelBg');
+    if (IS_PLAYSTATION) {
+        heroVideo.innerHTML = '';
+        heroVideo.style.display = 'none';
+        heroCover.style.opacity = '';
+        if (rightBg) rightBg.innerHTML = '';
+        heroVideoId = null;
+        return;
+    }
+
     if (!videoId) {
         heroVideo.innerHTML = '';
         heroVideo.style.display = 'none';
@@ -624,6 +662,7 @@ function sendHeroVideoCommand(func, args = []) {
 }
 
 function syncHeroVideoPlayback(shouldPlay) {
+    if (IS_PLAYSTATION) return;
     const current = ytReady && ytPlayer ? ytPlayer.getCurrentTime() || 0 : 0;
     sendHeroVideoCommand('seekTo', [current, true]);
     sendHeroVideoCommand(shouldPlay ? 'playVideo' : 'pauseVideo');
@@ -780,10 +819,11 @@ function loadTrack(index, shouldPlay) {
         recordPlay(track);
         playerEl.classList.add("visible");
         appEl.classList.add("player-open");
-        if (!isMobileLayout()) {
+        if (!isMobileLayout() && !IS_PLAYSTATION) {
             rightPanel.classList.add("visible");
             appEl.classList.add("panel-open");
         } else {
+            rightPanel.classList.remove("visible");
             appEl.classList.remove("panel-open");
         }
     }
@@ -877,7 +917,7 @@ async function loadView(query) {
     renderStatus("Carregando músicas...", "loading");
 
     try {
-        const data = await fetchSearch(randomQuery, 34);
+        const data = await fetchSearch(randomQuery, IS_PLAYSTATION ? PLAYSTATION_INITIAL_LIMIT : 34);
         console.log(`[VIEW] ${data.results.length} resultados recebidos da API`);
 
         let tracks = data.results.map(mapTrack);
@@ -906,7 +946,7 @@ async function loadRecommendations() {
     renderStatus("Carregando recomendações...", "loading");
 
     try {
-        const results = await fetchRecommendations(24);
+        const results = await fetchRecommendations(IS_PLAYSTATION ? PLAYSTATION_INITIAL_LIMIT : 24);
         console.log(`[RECOMMEND] ${results.length} recomendações recebidas`);
 
         displayList = filterKnownTracks(results.map(mapTrack));
@@ -945,7 +985,7 @@ async function performSearch(query) {
     renderStatus("Buscando...", "loading");
 
     try {
-        const data = await fetchSearch(term);
+        const data = await fetchSearch(term, searchLimit(24));
         displayList = shuffleArray(data.results.map(mapTrack));
         nextPageToken = data.nextPageToken;
         currentSearchToken = term;
@@ -970,12 +1010,12 @@ async function loadMore() {
     try {
         let data;
         if (currentSearchToken === "recommend") {
-            const results = await fetchRecommendations(12);
+            const results = await fetchRecommendations(searchLimit(12));
             data = { results: shuffleArray(results), nextPageToken: "" };
         } else if (nextPageToken) {
-            data = await fetchSearch(currentSearchToken, 12, nextPageToken);
+            data = await fetchSearch(currentSearchToken, searchLimit(12), nextPageToken);
         } else {
-            data = await fetchSearch(newQuery, 12);
+            data = await fetchSearch(newQuery, searchLimit(12));
             currentSearchToken = newQuery;
         }
 
