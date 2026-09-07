@@ -497,6 +497,35 @@ app.get('/api/recommend', async (req, res) => {
     }
 });
 
+// ===== DOWNLOAD APP =====
+const DOWNLOADS_DIR = path.join(__dirname, 'downloads');
+const APK_FILE = 'CamadaPlay.apk';
+
+app.get('/download', (req, res) => {
+    const apkPath = path.join(DOWNLOADS_DIR, APK_FILE);
+    
+    if (!fs.existsSync(apkPath)) {
+        return res.status(404).json({ 
+            error: 'APK não disponível ainda.',
+            message: 'O app ainda não foi publicado. Tente novamente mais tarde.'
+        });
+    }
+
+    console.log(`[DOWNLOAD] Enviando APK: ${apkPath}`);
+    res.download(apkPath, APK_FILE, (err) => {
+        if (err) {
+            console.error('[DOWNLOAD] Erro ao enviar:', err.message);
+        } else {
+            console.log('[DOWNLOAD] APK enviado com sucesso');
+        }
+    });
+});
+
+app.get('/api/download/check', (req, res) => {
+    const apkPath = path.join(DOWNLOADS_DIR, APK_FILE);
+    res.json({ available: fs.existsSync(apkPath) });
+});
+
 // ===== START =====
 app.listen(PORT, () => {
     console.log(`\n========================================`);
