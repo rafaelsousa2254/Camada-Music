@@ -1654,6 +1654,7 @@ updateProfileUI();
 // ===== BOTAO DOWNLOAD APP =====
 const downloadBtn = document.getElementById("downloadApp");
 const APK_URL = "/download";
+let apkAvailable = false;
 
 function isMobileDevice() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -1670,17 +1671,28 @@ function setupDownloadButton() {
         return;
     }
 
+    downloadBtn.style.display = "flex";
+
     fetch(`${API_BASE}/api/download/check`)
         .then((response) => response.ok ? response.json() : { available: false })
         .then((data) => {
-            downloadBtn.style.display = data.available ? "flex" : "none";
+            apkAvailable = Boolean(data.available);
+            downloadBtn.classList.toggle("unavailable", !apkAvailable);
         })
         .catch(() => {
-            downloadBtn.style.display = "none";
+            apkAvailable = false;
+            downloadBtn.classList.add("unavailable");
         });
 }
 
 setupDownloadButton();
+
+downloadBtn?.addEventListener("click", (event) => {
+    if (!apkAvailable) {
+        event.preventDefault();
+        alert("O app ainda não está disponível para baixar. Falta gerar o arquivo CamadaPlay.apk.");
+    }
+});
 
 // ===== NAVEGAÇÃO POR CONTROLE (TV) =====
 function isTVDevice() {
