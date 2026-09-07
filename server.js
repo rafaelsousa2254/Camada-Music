@@ -220,16 +220,14 @@ function pruneActiveVisitors() {
 
 function getVisitStats() {
     pruneActiveVisitors();
-    const usersTotal = Object.keys(loadUsers()).length;
-    const visitorsTotal = Object.keys(loadVisitors().visitors).length;
     const counters = loadCounters();
 
     return {
-        total: counters.totalVisits || usersTotal + visitorsTotal,
+        total: counters.totalVisits,
         active: activeVisitors.size,
-        users: usersTotal,
-        visitors: visitorsTotal,
-        uniqueDevices: counters.uniqueDevices || visitorsTotal
+        users: Object.keys(loadUsers()).length,
+        visitors: Object.keys(loadVisitors().visitors).length,
+        uniqueDevices: counters.uniqueDevices
     };
 }
 
