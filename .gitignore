@@ -3,6 +3,7 @@ node_modules/
 .cache/
 .users.json
 .playlists.json
+.visitors.json
 abrir_camadaplay.bat
 *.log
 .DS_Store

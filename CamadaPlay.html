@@ -55,7 +55,7 @@
                 </button>
                 <button class="menu-item" type="button" data-view="favoritos">
                     <svg class="menu-icon-neon menu-icon-heart" aria-hidden="true" viewBox="0 0 32 32"><path d="M16 26.5S6.5 20.7 6.5 12.8c0-3.4 2.4-5.8 5.4-5.8 1.9 0 3.3 1 4.1 2.4C16.8 8 18.2 7 20.1 7c3 0 5.4 2.4 5.4 5.8 0 7.9-9.5 13.7-9.5 13.7z"/></svg>
-                    <span>Musicas Curtidas</span>
+                    <span>Músicas Curtidas</span>
                 </button>
             </nav>
 
@@ -71,12 +71,12 @@
                 </div>
                 <button class="playlist-item active" type="button" data-query="week discoveries" data-type="mood"><span class="thumb thumb-one"></span>Descobertas da Semana</button>
                 <button class="playlist-item" type="button" data-query="night vibes" data-type="mood"><span class="thumb thumb-two"></span>Vibes Noturnas</button>
-                <button class="playlist-item" type="button" data-query="focus ambient" data-type="mood"><span class="thumb thumb-three"></span>Foco & Concentracao</button>
+                <button class="playlist-item" type="button" data-query="focus ambient" data-type="mood"><span class="thumb thumb-three"></span>Foco & Concentração</button>
                 <button class="playlist-item" type="button" data-query="workout electronic" data-type="mood"><span class="thumb thumb-four"></span>Treino Pesado</button>
                 <button class="playlist-item" type="button" data-query="chill relax" data-type="mood"><span class="thumb thumb-five"></span>Chill & Relax</button>
                 <button class="playlist-item" type="button" data-query="sad songs" data-type="mood"><span class="thumb thumb-six"></span>Sad Songs</button>
                 <button class="playlist-item" type="button" data-query="nostalgia" data-type="mood"><span class="thumb thumb-seven"></span>Mix Nostalgia</button>
-                <button class="playlist-item" type="button" data-query="electronic" data-type="mood"><span class="thumb thumb-eight"></span>Eletronica 2024</button>
+                <button class="playlist-item" type="button" data-query="electronic" data-type="mood"><span class="thumb thumb-eight"></span>Eletrônica 2024</button>
                 <button class="playlist-item" type="button" data-query="brazilian funk" data-type="genre"><span class="thumb thumb-nine"></span>Funk Brasileiro</button>
                 <button class="playlist-item" type="button" data-query="sertanejo hits" data-type="genre"><span class="thumb thumb-ten"></span>Sertanejo</button>
                 <button class="playlist-item" type="button" data-query="mpb classics" data-type="genre"><span class="thumb thumb-eleven"></span>MPB</button>
@@ -93,7 +93,7 @@
 
                 <form class="search" id="searchForm">
                     <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m21 20-5.2-5.2a7 7 0 1 0-1.4 1.4L20 21zM5 10a5 5 0 1 1 10 0A5 5 0 0 1 5 10z"/></svg>
-                    <input type="search" id="searchInput" placeholder="O que voce quer ouvir?" value="">
+                    <input type="search" id="searchInput" placeholder="O que você quer ouvir?" value="">
                     <button type="submit">Buscar</button>
                 </form>
 
@@ -101,7 +101,7 @@
                     <label class="theme-picker" for="themeSelect">
                         <span>Tema</span>
                         <select id="themeSelect" aria-label="Escolher tema">
-                            <option value="default">Padrao</option>
+                            <option value="default">Padrão</option>
                             <option value="anos80">Anos 80</option>
                             <option value="ashley-graves">Ashley Graves</option>
                             <option value="asta">Asta</option>
@@ -111,13 +111,24 @@
                             <option value="frieren">Frieren</option>
                             <option value="hacker">Hacker</option>
                             <option value="hello-kitty">Hello Kitty</option>
-                            <option value="japao">Japao</option>
+                            <option value="rikka-takanashi">Rikka Takanashi</option>
+                            <option value="kaguya-sama">Kaguya-sama</option>
+                            <option value="anya-forger">Anya Forger</option>
+                            <option value="komi-san">Komi-san</option>
+                            <option value="megumin-konosuba">Megumin Konosuba</option>
+                            <option value="hello-kitty-kuromi">Hello Kitty Kuromi</option>
+                            <option value="japao">Japão</option>
                             <option value="naruto">Naruto</option>
                             <option value="sakura">Sakura</option>
                             <option value="sono-bisque-doll">Sono Bisque Doll</option>
                             <option value="suzuki">Suzuki</option>
                         </select>
                     </label>
+                    <div class="visitor-stats" id="visitorStats" title="Acessos do site">
+                        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M16 11a4 4 0 1 0-3.2-6.4 5.5 5.5 0 0 1 0 12.8A4 4 0 0 0 16 11zm-8.5 1a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zm0 2c-3.6 0-6.5 1.8-6.5 4v1h13v-1c0-2.2-2.9-4-6.5-4zm8.5 0c-.7 0-1.4.1-2 .2 1.2.9 2 2.2 2 3.8v1h7v-1c0-2.2-3.1-4-7-4z"/></svg>
+                        <span><strong id="visitorTotal">0</strong><small>acessos</small></span>
+                        <span><strong id="visitorActive">0</strong><small>ativos</small></span>
+                    </div>
                     <button class="profile" type="button" aria-label="Perfil" id="profileBtn">
                         <span id="profileAvatar">CP</span>
                     </button>
@@ -208,7 +219,7 @@
                 <div class="hero-copy">
                     <p class="eyebrow" id="heroEyebrow">Bem-vindo ao</p>
                     <h1 id="viewTitle">Camada<span>Play</span></h1>
-                    <p id="heroText">Sua musica. Seu mundo.</p>
+                    <p id="heroText">Sua música. Seu mundo.</p>
 
                 </div>
                 <div class="hero-person" id="heroCover"></div>
@@ -219,7 +230,7 @@
 
             <section class="shelf">
                 <div class="section-heading">
-                    <h2 id="sectionTitle">Feito para voce</h2>
+                    <h2 id="sectionTitle">Feito para você</h2>
                 </div>
                 <div class="card-row" id="madeForYou"></div>
             </section>
@@ -232,10 +243,10 @@
                 <div class="side-now">
                     <span class="cover cover-one" id="sideCover"></span>
                     <span>
-                        <strong id="sideTitle">Nenhuma musica</strong>
+                        <strong id="sideTitle">Nenhuma música</strong>
                         <small id="sideArtist">Escolha uma faixa</small>
                     </span>
-                    <button class="favorite-btn" type="button" id="favSide" aria-label="Salvar musica"></button>
+                    <button class="favorite-btn" type="button" id="favSide" aria-label="Salvar música"></button>
                     <button class="more-button" type="button" aria-label="Mais opcoes"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm7 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm7 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg></button>
                 </div>
 
@@ -248,16 +259,16 @@
                 </div>
 
                 <div class="side-controls">
-                    <button class="icon-button ghost" type="button" id="shuffleTrack" aria-label="Aleatorio"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M16 3h5v5h-2V6.4l-3.9 3.9-1.4-1.4L17.6 5H16zM4 7h3.5c1.4 0 2.6.6 3.5 1.6l6.6 7H21v2h-4.3l-7.2-7.6A2.8 2.8 0 0 0 7.5 9H4zm9.7 8.1 1.4-1.4 2.5 2.5V14h2v5h-5v-2h1.8zM4 17h3.5c.8 0 1.5-.3 2-.9l1.1-1.2 1.5 1.4-1.2 1.2A4.8 4.8 0 0 1 7.5 19H4z"/></svg></button>
-                    <button class="icon-button" type="button" id="sidePrevTrack" aria-label="Musica anterior"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 5h2v14H6zM19 6v12L9 12z"/></svg></button>
+                    <button class="icon-button ghost" type="button" id="shuffleTrack" aria-label="Aleatório"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M16 3h5v5h-2V6.4l-3.9 3.9-1.4-1.4L17.6 5H16zM4 7h3.5c1.4 0 2.6.6 3.5 1.6l6.6 7H21v2h-4.3l-7.2-7.6A2.8 2.8 0 0 0 7.5 9H4zm9.7 8.1 1.4-1.4 2.5 2.5V14h2v5h-5v-2h1.8zM4 17h3.5c.8 0 1.5-.3 2-.9l1.1-1.2 1.5 1.4-1.2 1.2A4.8 4.8 0 0 1 7.5 19H4z"/></svg></button>
+                    <button class="icon-button" type="button" id="sidePrevTrack" aria-label="Música anterior"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 5h2v14H6zM19 6v12L9 12z"/></svg></button>
                     <button class="icon-button play-button" type="button" id="sidePlayPause" aria-label="Tocar"><svg class="icon-play" aria-hidden="true" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="icon-pause" aria-hidden="true" viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg></button>
-                    <button class="icon-button" type="button" id="sideNextTrack" aria-label="Proxima musica"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM5 6v12l10-6z"/></svg></button>
+                    <button class="icon-button" type="button" id="sideNextTrack" aria-label="Próxima música"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM5 6v12l10-6z"/></svg></button>
                     <button class="icon-button ghost" type="button" id="repeatTrack" aria-label="Repetir"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 7h10l-2-2 1.4-1.4L21 8l-4.6 4.4L15 11l2-2H7a3 3 0 0 0-3 3v1H2v-1a5 5 0 0 1 5-5zm10 10H7l2 2-1.4 1.4L3 16l4.6-4.4L9 13l-2 2h10a3 3 0 0 0 3-3v-1h2v1a5 5 0 0 1-5 5z"/></svg></button>
                 </div>
             </section>
 
             <section class="queue">
-                <h2>Fila de reproducao</h2>
+                <h2>Fila de reprodução</h2>
                 <div class="queue-list" id="queueList"></div>
             </section>
         </aside>
@@ -267,23 +278,23 @@
         <div class="now-playing">
             <span class="cover cover-one" id="playerCover"></span>
             <span>
-                <strong id="playerTitle">Nenhuma musica</strong>
+                <strong id="playerTitle">Nenhuma música</strong>
                 <small id="playerArtist">Escolha uma faixa para tocar</small>
             </span>
-            <button class="favorite-btn" type="button" id="favPlayer" aria-label="Salvar musica"></button>
+            <button class="favorite-btn" type="button" id="favPlayer" aria-label="Salvar música"></button>
             <button class="more-button" type="button" aria-label="Mais opcoes"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm7 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm7 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg></button>
         </div>
 
         <div class="bottom-controls">
-            <button class="icon-button ghost" type="button" id="bottomShuffle" aria-label="Aleatorio"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M16 3h5v5h-2V6.4l-3.9 3.9-1.4-1.4L17.6 5H16zM4 7h3.5c1.4 0 2.6.6 3.5 1.6l6.6 7H21v2h-4.3l-7.2-7.6A2.8 2.8 0 0 0 7.5 9H4zm9.7 8.1 1.4-1.4 2.5 2.5V14h2v5h-5v-2h1.8zM4 17h3.5c.8 0 1.5-.3 2-.9l1.1-1.2 1.5 1.4-1.2 1.2A4.8 4.8 0 0 1 7.5 19H4z"/></svg></button>
-            <button class="icon-button" type="button" id="prevTrack" aria-label="Musica anterior"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 5h2v14H6zM19 6v12L9 12z"/></svg></button>
+            <button class="icon-button ghost" type="button" id="bottomShuffle" aria-label="Aleatório"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M16 3h5v5h-2V6.4l-3.9 3.9-1.4-1.4L17.6 5H16zM4 7h3.5c1.4 0 2.6.6 3.5 1.6l6.6 7H21v2h-4.3l-7.2-7.6A2.8 2.8 0 0 0 7.5 9H4zm9.7 8.1 1.4-1.4 2.5 2.5V14h2v5h-5v-2h1.8zM4 17h3.5c.8 0 1.5-.3 2-.9l1.1-1.2 1.5 1.4-1.2 1.2A4.8 4.8 0 0 1 7.5 19H4z"/></svg></button>
+            <button class="icon-button" type="button" id="prevTrack" aria-label="Música anterior"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 5h2v14H6zM19 6v12L9 12z"/></svg></button>
             <button class="icon-button play-button" type="button" id="playPause" aria-label="Tocar"><svg class="icon-play" aria-hidden="true" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="icon-pause" aria-hidden="true" viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg></button>
-            <button class="icon-button" type="button" id="nextTrack" aria-label="Proxima musica"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM5 6v12l10-6z"/></svg></button>
+            <button class="icon-button" type="button" id="nextTrack" aria-label="Próxima música"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM5 6v12l10-6z"/></svg></button>
             <button class="icon-button ghost" type="button" id="bottomRepeat" aria-label="Repetir"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 7h10l-2-2 1.4-1.4L21 8l-4.6 4.4L15 11l2-2H7a3 3 0 0 0-3 3v1H2v-1a5 5 0 0 1 5-5zm10 10H7l2 2-1.4 1.4L3 16l4.6-4.4L9 13l-2 2h10a3 3 0 0 0 3-3v-1h2v1a5 5 0 0 1-5 5z"/></svg></button>
         </div>
 
         <div class="mobile-progress">
-            <input type="range" id="mobileProgressControl" min="0" max="100" value="0" aria-label="Progresso da musica">
+            <input type="range" id="mobileProgressControl" min="0" max="100" value="0" aria-label="Progresso da música">
             <div>
                 <span id="mobileCurrentTime">0:00</span>
                 <span id="mobileDurationTime">0:00</span>
@@ -302,8 +313,8 @@
 
     <div id="ytPlayer" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;"></div>
     <div class="lyrics-panel" id="lyricsPanel">
-        <h3>Letra da musica</h3>
-        <p id="lyricsContent">Selecione uma musica para ver a letra.</p>
+        <h3>Letra da música</h3>
+        <p id="lyricsContent">Selecione uma música para ver a letra.</p>
     </div>
     <div class="context-menu" id="contextMenu">
         <button class="context-menu-item" data-action="queue">

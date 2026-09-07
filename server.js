@@ -11,12 +11,25 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const SALT_ROUNDS = 10;
+const ACTIVE_VISITOR_TTL = 45 * 1000;
 
 // ===== yt-dlp =====
 function findYtDlp() {
     if (process.env.YTDLP_PATH) return process.env.YTDLP_PATH;
-    if (os.platform() === 'win32') {
-        return path.join(process.env.APPDATA, 'Python', 'Python314', 'Scripts', 'yt-dlp.exe');
+    if (os.platform() === 'win32' && process.env.APPDATA) {
+        const pythonScripts = path.join(process.env.APPDATA, 'Python');
+        if (fs.existsSync(pythonScripts)) {
+            const versions = fs.readdirSync(pythonScripts)
+                .filter(name => /^Python\d+$/.test(name))
+                .sort()
+                .reverse();
+
+            for (const version of versions) {
+                const candidate = path.join(pythonScripts, version, 'Scripts', 'yt-dlp.exe');
+                if (fs.existsSync(candidate)) return candidate;
+            }
+        }
+        return 'yt-dlp.exe';
     }
     return 'yt-dlp';
 }
@@ -65,6 +78,47 @@ function saveUsers(users) {
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 }
 
+function getBearerToken(req) {
+    const header = req.headers.authorization || '';
+    return header.startsWith('Bearer ') ? header.slice(7).trim() : '';
+}
+
+function createSession(users, username) {
+    const token = crypto.randomUUID();
+    users[username].token = token;
+    users[username].tokenCreatedAt = Date.now();
+    saveUsers(users);
+    return token;
+}
+
+function findUserByToken(token) {
+    if (!token) return null;
+
+    const users = loadUsers();
+    const entry = Object.entries(users).find(([, data]) => data.token === token);
+    if (!entry) return null;
+
+    const [username, user] = entry;
+    return { username, user, users };
+}
+
+function requireUser(req, res, username = null) {
+    const token = getBearerToken(req);
+    const session = findUserByToken(token);
+
+    if (!session) {
+        res.status(401).json({ error: 'Não autenticado.' });
+        return null;
+    }
+
+    if (username && session.username !== username) {
+        res.status(403).json({ error: 'Você não tem permissão para acessar esse usuário.' });
+        return null;
+    }
+
+    return session;
+}
+
 // ===== PLAYLISTS (JSON file) =====
 const PLAYLISTS_FILE = path.join(__dirname, '.playlists.json');
 
@@ -77,6 +131,45 @@ function savePlaylists(data) {
     fs.writeFileSync(PLAYLISTS_FILE, JSON.stringify(data, null, 2));
 }
 
+// ===== VISIT STATS =====
+const VISITORS_FILE = path.join(__dirname, '.visitors.json');
+const activeVisitors = new Map();
+
+function loadVisitors() {
+    try {
+        const data = JSON.parse(fs.readFileSync(VISITORS_FILE, 'utf8'));
+        return data && typeof data === 'object' && data.visitors ? data : { visitors: {} };
+    } catch {
+        return { visitors: {} };
+    }
+}
+
+function saveVisitors(data) {
+    fs.writeFileSync(VISITORS_FILE, JSON.stringify(data, null, 2));
+}
+
+function pruneActiveVisitors() {
+    const now = Date.now();
+    for (const [id, lastSeen] of activeVisitors.entries()) {
+        if (now - lastSeen > ACTIVE_VISITOR_TTL) {
+            activeVisitors.delete(id);
+        }
+    }
+}
+
+function getVisitStats() {
+    pruneActiveVisitors();
+    const usersTotal = Object.keys(loadUsers()).length;
+    const visitorsTotal = Object.keys(loadVisitors().visitors).length;
+
+    return {
+        total: usersTotal + visitorsTotal,
+        active: activeVisitors.size,
+        users: usersTotal,
+        visitors: visitorsTotal
+    };
+}
+
 // ===== MIDDLEWARE =====
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
@@ -84,6 +177,38 @@ app.use(express.static(__dirname, { dotfiles: 'deny' }));
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/CamadaPlay.html');
+});
+
+app.post('/api/stats/visit', (req, res) => {
+    const visitorId = String(req.body?.visitorId || '').trim();
+    const username = String(req.body?.username || '').trim();
+
+    if (!visitorId || visitorId.length > 80) {
+        return res.status(400).json({ error: 'Visitante inválido.' });
+    }
+
+    const visitorsData = loadVisitors();
+    const users = loadUsers();
+    const now = Date.now();
+
+    if (username && users[username]) {
+        delete visitorsData.visitors[visitorId];
+    } else {
+        if (!visitorsData.visitors[visitorId]) {
+            visitorsData.visitors[visitorId] = { firstSeen: now, lastSeen: now };
+        } else {
+            visitorsData.visitors[visitorId].lastSeen = now;
+        }
+    }
+
+    saveVisitors(visitorsData);
+
+    activeVisitors.set(visitorId, now);
+    res.json(getVisitStats());
+});
+
+app.get('/api/stats', (req, res) => {
+    res.json(getVisitStats());
 });
 
 // ===== YT-DLP SEARCH =====
@@ -108,7 +233,7 @@ function ytDlpSearch(query, limit = 12) {
         execFile(YTDLP_PATH, args, { timeout: 30000 }, (error, stdout, stderr) => {
             if (error && !stdout) {
                 console.error('[YT-DLP] Erro:', error.message);
-                return reject(new Error('Falha ao buscar videos.'));
+                return reject(new Error('Falha ao buscar vídeos.'));
             }
 
             const lines = stdout.trim().split('\n').filter(Boolean);
@@ -117,7 +242,7 @@ function ytDlpSearch(query, limit = 12) {
                 const thumbnail = id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : '';
                 return {
                     id: id || '',
-                    title: title || 'Sem titulo',
+                    title: title || 'Sem título',
                     artist: artist || 'Desconhecido',
                     thumbnail,
                     description: ''
@@ -149,9 +274,7 @@ app.post('/api/auth/register', async (req, res) => {
 
     const hashed = await bcrypt.hash(password, SALT_ROUNDS);
     users[username] = { password: hashed, photo: null, createdAt: Date.now() };
-    saveUsers(users);
-
-    const token = crypto.randomUUID();
+    const token = createSession(users, username);
     res.json({ token, username, photo: null });
 });
 
@@ -162,7 +285,7 @@ app.post('/api/auth/login', async (req, res) => {
     const user = users[username];
 
     if (!user) {
-        return res.status(401).json({ error: 'Usuario nao encontrado.' });
+        return res.status(401).json({ error: 'Usuário não encontrado.' });
     }
 
     const match = await bcrypt.compare(password, user.password);
@@ -170,38 +293,25 @@ app.post('/api/auth/login', async (req, res) => {
         return res.status(401).json({ error: 'Senha incorreta.' });
     }
 
-    const token = crypto.randomUUID();
+    const token = createSession(users, username);
     res.json({ token, username, photo: user.photo });
 });
 
 app.put('/api/auth/profile', (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token) return res.status(401).json({ error: 'Nao autenticado.' });
-
     const { photo } = req.body;
-    const users = loadUsers();
+    const session = requireUser(req, res);
+    if (!session) return;
 
-    // Encontrar usuario pelo token (simplificado - em producao usar JWT)
-    let foundUser = null;
-    for (const [name, data] of Object.entries(users)) {
-        if (data.token === token) {
-            foundUser = name;
-            break;
-        }
-    }
+    if (photo !== undefined) session.users[session.username].photo = photo;
+    saveUsers(session.users);
 
-    if (!foundUser) return res.status(401).json({ error: 'Token invalido.' });
-
-    if (photo !== undefined) users[foundUser].photo = photo;
-    saveUsers(users);
-
-    res.json({ username: foundUser, photo: users[foundUser].photo });
+    res.json({ username: session.username, photo: session.users[session.username].photo });
 });
 
 // ===== PLAYLIST ROUTES =====
 app.get('/api/playlists/:username', (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token) return res.status(401).json({ error: 'Nao autenticado.' });
+    const session = requireUser(req, res, req.params.username);
+    if (!session) return;
 
     const allPlaylists = loadPlaylists();
     const userPlaylists = allPlaylists[req.params.username] || [];
@@ -209,11 +319,10 @@ app.get('/api/playlists/:username', (req, res) => {
 });
 
 app.post('/api/playlists', (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token) return res.status(401).json({ error: 'Nao autenticado.' });
-
     const { username, name, tracks } = req.body;
     if (!username || !name) return res.status(400).json({ error: 'Dados invalidos.' });
+    const session = requireUser(req, res, username);
+    if (!session) return;
 
     const allPlaylists = loadPlaylists();
     if (!allPlaylists[username]) allPlaylists[username] = [];
@@ -232,8 +341,8 @@ app.post('/api/playlists', (req, res) => {
 });
 
 app.delete('/api/playlists/:username/:playlistId', (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token) return res.status(401).json({ error: 'Nao autenticado.' });
+    const session = requireUser(req, res, req.params.username);
+    if (!session) return;
 
     const allPlaylists = loadPlaylists();
     const userPlaylists = allPlaylists[req.params.username] || [];
@@ -244,15 +353,15 @@ app.delete('/api/playlists/:username/:playlistId', (req, res) => {
 });
 
 app.put('/api/playlists/:username/:playlistId', (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token) return res.status(401).json({ error: 'Nao autenticado.' });
+    const session = requireUser(req, res, req.params.username);
+    if (!session) return;
 
     const { name, tracks } = req.body;
     const allPlaylists = loadPlaylists();
     const userPlaylists = allPlaylists[req.params.username] || [];
     const playlist = userPlaylists.find(p => p.id === req.params.playlistId);
 
-    if (!playlist) return res.status(404).json({ error: 'Playlist nao encontrada.' });
+    if (!playlist) return res.status(404).json({ error: 'Playlist não encontrada.' });
 
     if (name !== undefined) playlist.name = name;
     if (tracks !== undefined) playlist.tracks = tracks;
@@ -269,7 +378,7 @@ app.get('/api/search', async (req, res) => {
     console.log(`[SEARCH] Requisicao - query: "${query}", limit: ${limit}`);
 
     if (!query) {
-        return res.status(400).json({ error: 'Parametro "q" obrigatorio.' });
+        return res.status(400).json({ error: 'Parâmetro "q" obrigatório.' });
     }
 
     try {
@@ -278,7 +387,7 @@ app.get('/api/search', async (req, res) => {
         res.json({ results, nextPageToken: '' });
     } catch (error) {
         console.error('[SEARCH] Erro:', error.message);
-        res.status(500).json({ error: 'Falha ao buscar videos.' });
+        res.status(500).json({ error: 'Falha ao buscar vídeos.' });
     }
 });
 
@@ -295,25 +404,22 @@ app.get('/api/recommend', async (req, res) => {
 
     try {
         let queries = [];
+        const cleanSignal = (value) => String(value || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^\w\s'-]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
         const addQuery = (query) => {
-            const clean = String(query || '').trim();
+            const clean = cleanSignal(query);
             if (clean && !queries.includes(clean)) queries.push(clean);
         };
-
-        if (categories) {
-            categories.split(',').filter(Boolean).slice(0, 4).forEach(category => {
-                const name = category.trim();
-                addQuery(`${name} musicas mais tocadas`);
-                addQuery(`${name} playlist atualizada`);
-                addQuery(`${name} hits`);
-            });
-        }
 
         if (artists) {
             artists.split(',').filter(Boolean).slice(0, 5).forEach(artist => {
                 const name = artist.trim();
-                addQuery(`${name} melhores musicas`);
-                addQuery(`${name} musicas parecidas`);
+                addQuery(`${name} melhores músicas`);
+                addQuery(`${name} músicas parecidas`);
                 addQuery(`${name} playlist`);
             });
         }
@@ -321,15 +427,24 @@ app.get('/api/recommend', async (req, res) => {
         if (titles) {
             titles.split(',').filter(Boolean).slice(0, 4).forEach(title => {
                 const name = title.trim();
-                addQuery(`${name} musicas parecidas`);
+                addQuery(`${name} músicas parecidas`);
                 addQuery(`${name} radio`);
+            });
+        }
+
+        if (categories) {
+            categories.split(',').filter(Boolean).slice(0, 4).forEach(category => {
+                const name = category.trim();
+                addQuery(`${name} músicas mais tocadas`);
+                addQuery(`${name} playlist atualizada`);
+                addQuery(`${name} hits`);
             });
         }
 
         if (searches) {
             searches.split(',').filter(Boolean).slice(0, 5).forEach(search => {
                 const name = search.trim();
-                addQuery(`${name} musicas`);
+                addQuery(`${name} músicas`);
                 addQuery(`${name} playlist`);
             });
         }
@@ -341,7 +456,18 @@ app.get('/api/recommend', async (req, res) => {
         }
 
         if (queries.length === 0) {
-            queries = ['music hits 2024', 'top music today', 'new music release'];
+            queries = [
+                'Taylor Swift The Weeknd Dua Lipa Bruno Mars hits',
+                'Bad Bunny Karol G Anitta J Balvin reggaeton latin hits',
+                'Kendrick Lamar Drake Travis Scott Kanye West rap hits',
+                'Ana Castela Gusttavo Lima Henrique e Juliano sertanejo hits',
+                'Anitta Luisa Sonza Pabllo Vittar Ludmilla pop brasileiro',
+                'BTS BLACKPINK NewJeans Stray Kids kpop hits',
+                'Arctic Monkeys Foo Fighters Linkin Park Nirvana rock hits',
+                'Calvin Harris David Guetta Alan Walker Avicii EDM hits',
+                'Racionais MCs Djonga BK Emicida rap nacional',
+                'Tom Jobim Caetano Veloso Gilberto Gil Chico Buarque MPB'
+            ];
         }
 
         const allResults = [];
@@ -363,11 +489,11 @@ app.get('/api/recommend', async (req, res) => {
             }
         }
 
-        console.log(`[RECOMMEND] ${allResults.length} recomendacoes`);
+        console.log(`[RECOMMEND] ${allResults.length} recomendações`);
         res.json({ results: allResults.slice(0, limit) });
     } catch (error) {
         console.error('[RECOMMEND] Erro:', error.message);
-        res.status(500).json({ error: 'Falha ao buscar recomendacoes.' });
+        res.status(500).json({ error: 'Falha ao buscar recomendações.' });
     }
 });
 

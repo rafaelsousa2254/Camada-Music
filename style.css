@@ -205,6 +205,160 @@ body[data-theme="hello-kitty"] {
         linear-gradient(135deg, #190408, #650d1f 54%, #ff87a4);
 }
 
+body[data-theme="rikka-takanashi"] {
+    --bg: #0c1025;
+    --panel: rgba(19, 20, 48, .9);
+    --panel-strong: rgba(25, 25, 61, .96);
+    --line: rgba(116, 152, 255, .28);
+    --line-strong: rgba(255, 184, 116, .72);
+    --text: #f7f7ff;
+    --muted: #c2c9f5;
+    --soft: #fff0cf;
+    --blue: #7aa7ff;
+    --blue-soft: #ffd37a;
+    --blue-dark: #2b2a66;
+    --accent-rgb: 122, 167, 255;
+    --accent-2: #ff7ea8;
+    --hero-image: url("assets/themes/foto_rikka_takanashi.png");
+    --hero-person-image: url("assets/themes/foto_rikka_takanashi.png");
+    --hero-position: 58% center;
+    --hero-person-position: 58% center;
+    --hero-overlay: linear-gradient(90deg, rgba(9, 13, 35, .94), rgba(31, 28, 70, .52) 45%, rgba(255, 154, 99, .14));
+    --hero-glow: radial-gradient(circle at 72% 28%, rgba(255, 196, 117, .5), transparent 34%);
+    --page-bg:
+        radial-gradient(circle at 76% 8%, rgba(255, 179, 91, .2), transparent 28%),
+        radial-gradient(circle at 24% 18%, rgba(111, 143, 255, .26), transparent 30%),
+        linear-gradient(135deg, #060817, #171839 54%, #34182e);
+}
+
+body[data-theme="kaguya-sama"] {
+    --bg: #15070d;
+    --panel: rgba(31, 10, 17, .91);
+    --panel-strong: rgba(49, 13, 23, .96);
+    --line: rgba(201, 35, 61, .32);
+    --line-strong: rgba(255, 111, 111, .78);
+    --text: #fff7f8;
+    --muted: #e7b7bd;
+    --soft: #ffe2d1;
+    --blue: #c9233d;
+    --blue-soft: #ff9b74;
+    --blue-dark: #5c0d1d;
+    --accent-rgb: 201, 35, 61;
+    --accent-2: #f0c27a;
+    --hero-image: url("assets/themes/foto_kaguya_sama.png");
+    --hero-person-image: url("assets/themes/foto_kaguya_sama.png");
+    --hero-position: 56% center;
+    --hero-person-position: 58% center;
+    --hero-overlay: linear-gradient(90deg, rgba(22, 5, 11, .95), rgba(92, 18, 35, .5) 46%, rgba(231, 116, 81, .1));
+    --hero-glow: radial-gradient(circle at 24% 40%, rgba(244, 122, 98, .46), transparent 33%);
+    --page-bg:
+        radial-gradient(circle at 20% 8%, rgba(240, 128, 105, .24), transparent 27%),
+        linear-gradient(135deg, #080205, #2b0711 52%, #160308);
+}
+
+body[data-theme="anya-forger"] {
+    --bg: #fff0f2;
+    --panel: rgba(255, 222, 225, .91);
+    --panel-strong: rgba(255, 211, 216, .96);
+    --line: rgba(255, 139, 154, .34);
+    --line-strong: rgba(224, 170, 77, .8);
+    --text: #fff9fb;
+    --muted: #ffe0e6;
+    --soft: #fff5dc;
+    --blue: #ff8fa3;
+    --blue-soft: #f3c45f;
+    --blue-dark: #8b3443;
+    --accent-rgb: 255, 143, 163;
+    --accent-2: #71b7ff;
+    --hero-image: url("assets/themes/foto_anya_forger.png");
+    --hero-person-image: url("assets/themes/foto_anya_forger.png");
+    --hero-position: 48% center;
+    --hero-person-position: 48% center;
+    --hero-overlay: linear-gradient(90deg, rgba(125, 54, 67, .78), rgba(255, 159, 176, .28) 44%, rgba(255, 222, 132, .08));
+    --hero-glow: radial-gradient(circle at 82% 30%, rgba(255, 222, 130, .58), transparent 34%);
+    --page-bg:
+        radial-gradient(circle at 78% 10%, rgba(113, 183, 255, .24), transparent 28%),
+        radial-gradient(circle at 24% 16%, rgba(255, 143, 163, .28), transparent 28%),
+        linear-gradient(135deg, #5c1e2c, #ff9aad 54%, #f6d06b);
+}
+
+body[data-theme="komi-san"] {
+    --bg: #100d1c;
+    --panel: rgba(22, 18, 35, .92);
+    --panel-strong: rgba(33, 27, 52, .97);
+    --line: rgba(151, 94, 201, .3);
+    --line-strong: rgba(208, 156, 255, .74);
+    --text: #faf7ff;
+    --muted: #cdbfe0;
+    --soft: #eee5ff;
+    --blue: #9d6bd5;
+    --blue-soft: #d7b1ff;
+    --blue-dark: #35204f;
+    --accent-rgb: 157, 107, 213;
+    --accent-2: #ba3156;
+    --hero-image: url("assets/themes/foto_komi_san.png");
+    --hero-person-image: url("assets/themes/foto_komi_san.png");
+    --hero-position: 60% center;
+    --hero-person-position: 60% center;
+    --hero-overlay: linear-gradient(90deg, rgba(12, 10, 25, .95), rgba(51, 33, 76, .5) 48%, rgba(231, 200, 168, .08));
+    --hero-glow: radial-gradient(circle at 26% 28%, rgba(235, 205, 174, .34), transparent 32%);
+    --page-bg:
+        radial-gradient(circle at 74% 12%, rgba(157, 107, 213, .26), transparent 28%),
+        linear-gradient(135deg, #07060d, #1b142b 55%, #331a31);
+}
+
+body[data-theme="megumin-konosuba"] {
+    --bg: #170706;
+    --panel: rgba(35, 10, 9, .92);
+    --panel-strong: rgba(58, 15, 12, .97);
+    --line: rgba(255, 72, 43, .34);
+    --line-strong: rgba(255, 180, 67, .82);
+    --text: #fff6ec;
+    --muted: #efb08e;
+    --soft: #ffe2a9;
+    --blue: #ff482b;
+    --blue-soft: #ffb443;
+    --blue-dark: #5e1110;
+    --accent-rgb: 255, 72, 43;
+    --accent-2: #8b4cff;
+    --hero-image: url("assets/themes/foto_megumin_konosuba.png");
+    --hero-person-image: url("assets/themes/foto_megumin_konosuba.png");
+    --hero-position: 54% center;
+    --hero-person-position: 54% center;
+    --hero-overlay: linear-gradient(90deg, rgba(22, 5, 6, .95), rgba(102, 22, 14, .48) 46%, rgba(255, 159, 51, .12));
+    --hero-glow: radial-gradient(circle at 80% 30%, rgba(255, 157, 42, .58), transparent 34%);
+    --page-bg:
+        radial-gradient(circle at 82% 10%, rgba(255, 176, 49, .25), transparent 28%),
+        radial-gradient(circle at 22% 18%, rgba(143, 67, 255, .16), transparent 30%),
+        linear-gradient(135deg, #090202, #3a0808 52%, #1d0b25);
+}
+
+body[data-theme="hello-kitty-kuromi"] {
+    --bg: #160711;
+    --panel: rgba(31, 10, 25, .92);
+    --panel-strong: rgba(49, 13, 40, .97);
+    --line: rgba(255, 88, 166, .34);
+    --line-strong: rgba(255, 137, 199, .82);
+    --text: #fff7fb;
+    --muted: #ffc0df;
+    --soft: #ffe8f4;
+    --blue: #ff58a6;
+    --blue-soft: #ff9bcb;
+    --blue-dark: #3b1733;
+    --accent-rgb: 255, 88, 166;
+    --accent-2: #1f1026;
+    --hero-image: url("assets/themes/foto_hello_kitty_kuromi.png");
+    --hero-person-image: url("assets/themes/foto_hello_kitty_kuromi.png");
+    --hero-position: 56% center;
+    --hero-person-position: 56% center;
+    --hero-overlay: linear-gradient(90deg, rgba(21, 6, 18, .94), rgba(92, 29, 73, .46) 45%, rgba(255, 111, 175, .1));
+    --hero-glow: radial-gradient(circle at 22% 28%, rgba(255, 142, 196, .46), transparent 34%);
+    --page-bg:
+        radial-gradient(circle at 22% 10%, rgba(255, 117, 184, .28), transparent 28%),
+        radial-gradient(circle at 80% 16%, rgba(255, 194, 220, .16), transparent 26%),
+        linear-gradient(135deg, #080309, #2a0b22 54%, #5b1742);
+}
+
 body[data-theme="ashley-graves"] {
     --bg: #010807;
     --panel: rgba(2, 17, 15, .91);
@@ -774,6 +928,46 @@ svg {
 
 .theme-picker option {
     color: #061024;
+}
+
+.visitor-stats {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 38px;
+    padding: 0 12px;
+    border: 1px solid rgba(var(--accent-rgb), .34);
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(var(--accent-rgb), .16), rgba(2, 10, 26, .42));
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .18);
+    color: var(--text);
+}
+
+.visitor-stats svg {
+    width: 18px;
+    height: 18px;
+    fill: var(--blue-soft);
+    flex: 0 0 auto;
+}
+
+.visitor-stats span {
+    display: grid;
+    gap: 1px;
+    min-width: 38px;
+}
+
+.visitor-stats strong {
+    color: var(--text);
+    font-size: .9rem;
+    line-height: 1;
+}
+
+.visitor-stats small {
+    color: var(--muted);
+    font-size: .62rem;
+    font-weight: 800;
+    line-height: 1;
+    text-transform: uppercase;
 }
 
 /* ===== HERO ===== */
@@ -1560,6 +1754,12 @@ svg {
         justify-content: space-between;
     }
 
+    .visitor-stats {
+        flex: 0 1 170px;
+        justify-content: center;
+        padding: 0 10px;
+    }
+
     .profile {
         width: 54px;
         height: 54px;
@@ -1585,7 +1785,12 @@ svg {
     .hero h1 {
         font-size: clamp(2.15rem, 14vw, 3.15rem);
         line-height: 1;
-        overflow-wrap: anywhere;
+        overflow-wrap: normal;
+        word-break: keep-all;
+    }
+
+    .hero h1 span {
+        display: block;
     }
 
     .hero p:not(.eyebrow) {
