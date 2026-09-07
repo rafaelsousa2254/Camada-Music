@@ -2288,11 +2288,7 @@ svg {
 
 @media (max-width: 860px) {
     .download-btn {
-        display: flex;
-    }
-
-    .download-btn.unavailable {
-        opacity: .72;
+        display: none;
     }
 }
 
