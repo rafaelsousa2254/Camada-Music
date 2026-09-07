@@ -1982,7 +1982,7 @@ svg {
     .mobile-volume input {
         position: absolute;
         left: 50%;
-        bottom: calc(100% + 52px);
+        bottom: calc(100% + 60px);
         width: 112px;
         max-width: none;
         transform: translateX(-50%) rotate(-90deg);
