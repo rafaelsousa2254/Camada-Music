@@ -1661,23 +1661,13 @@ function isMobileDevice() {
 
 function setupDownloadButton() {
     if (!downloadBtn) return;
-
-    downloadBtn.href = APK_URL;
-    downloadBtn.setAttribute("download", "CamadaPlay.apk");
-
-    if (!isMobileDevice()) {
+    
+    if (isMobileDevice()) {
+        downloadBtn.href = APK_URL;
+        downloadBtn.style.display = "flex";
+    } else {
         downloadBtn.style.display = "none";
-        return;
     }
-
-    fetch(`${API_BASE}/api/download/check`)
-        .then((response) => response.ok ? response.json() : { available: false })
-        .then((data) => {
-            downloadBtn.style.display = data.available ? "flex" : "none";
-        })
-        .catch(() => {
-            downloadBtn.style.display = "none";
-        });
 }
 
 setupDownloadButton();

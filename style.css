@@ -2267,7 +2267,7 @@ svg {
 
 /* ===== BOTAO DOWNLOAD APP ===== */
 .download-btn {
-    display: none;
+    display: none !important;
     margin-top: 12px;
     background: linear-gradient(135deg, var(--blue), var(--blue-dark)) !important;
     color: #fff !important;
@@ -2288,7 +2288,7 @@ svg {
 
 @media (max-width: 860px) {
     .download-btn {
-        display: none;
+        display: flex !important;
     }
 }
 
