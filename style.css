@@ -498,6 +498,62 @@ body {
     font-family: "Inter", Arial, sans-serif;
 }
 
+body.low-power-player *,
+body.low-power-player *::before,
+body.low-power-player *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+}
+
+body.low-power-player .hero-video,
+body.low-power-player .right-panel-bg {
+    display: none !important;
+}
+
+body.low-power-player .sidebar,
+body.low-power-player .side-player,
+body.low-power-player .queue,
+body.low-power-player .topbar,
+body.low-power-player .player {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+}
+
+body.app-fullscreen {
+    overflow: hidden !important;
+}
+
+body.app-fullscreen .app {
+    width: 100vw;
+    height: 100vh;
+}
+
+body.low-power-player .app {
+    grid-template-columns: 220px minmax(0, 1fr);
+}
+
+body.low-power-player .right-panel {
+    display: none !important;
+}
+
+body.low-power-player .hero {
+    min-height: 210px;
+    border-radius: 8px;
+    box-shadow: none !important;
+}
+
+body.low-power-player .hero::after,
+body.low-power-player .hero-person {
+    display: none !important;
+}
+
+body.low-power-player .mix-card:hover,
+body.low-power-player .queue-item:hover,
+body.low-power-player .menu-item:hover {
+    transform: none !important;
+}
+
 button,
 input {
     font: inherit;

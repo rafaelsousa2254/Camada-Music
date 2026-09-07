@@ -65,6 +65,21 @@ const CATEGORY_KEYWORDS = [
     { name: "lo-fi chill", terms: ["lofi", "lo-fi", "chill", "relax", "ambient", "study", "sleep"] }
 ];
 
+const USER_AGENT = navigator.userAgent || "";
+const IS_PLAYSTATION = /PlayStation|PLAYSTATION/i.test(USER_AGENT);
+const IS_TV_BROWSER = /SmartTV|smarttv|TV|WebTV|NetCast|webOS|Tizen|BRAVIA|AFT|HbbTV|CrKey|Viera|Aquos|Hisense|TCL|Roku|Philips|SamsungBrowser\/TV|DIAL/i.test(USER_AGENT);
+let isLowPowerPlayer = IS_PLAYSTATION || IS_TV_BROWSER || isMobileLayout();
+
+function setLowPowerPlayer(enabled) {
+    isLowPowerPlayer = Boolean(enabled);
+    document.body.classList.toggle("low-power-player", isLowPowerPlayer);
+    if (isLowPowerPlayer) {
+        embedHeroVideo(null);
+    }
+}
+
+setLowPowerPlayer(isLowPowerPlayer);
+
 let displayList = [];
 let tracks = [];
 let currentTrack = 0;
@@ -225,6 +240,21 @@ window.onYTPlayerReady = function(event) {
 
 window.onYTPlayerStateChange = function(event) {
     onYTStateChange(event);
+};
+
+window.onYTPlayerError = function(event) {
+    const code = event?.data;
+    console.warn("[YT] Erro de reprodução:", code);
+    playing = false;
+    setPlayState(false);
+    embedHeroVideo(null);
+
+    const hasNext = tracks.length > 1 && currentTrack < tracks.length - 1;
+    if (hasNext) {
+        playNextTrack();
+    } else {
+        renderStatus("Essa música não pode tocar neste dispositivo. Tente outra faixa.", "error");
+    }
 };
 
 function onYTStateChange(event) {
@@ -576,6 +606,15 @@ function embedHeroVideo(videoId, startAt = null) {
         return;
     }
     const rightBg = document.getElementById('rightPanelBg');
+    if (isLowPowerPlayer) {
+        heroVideo.innerHTML = '';
+        heroVideo.style.display = 'none';
+        heroCover.style.opacity = '';
+        if (rightBg) rightBg.innerHTML = '';
+        heroVideoId = null;
+        return;
+    }
+
     if (!videoId) {
         heroVideo.innerHTML = '';
         heroVideo.style.display = 'none';
@@ -624,6 +663,7 @@ function sendHeroVideoCommand(func, args = []) {
 }
 
 function syncHeroVideoPlayback(shouldPlay) {
+    if (isLowPowerPlayer) return;
     const current = ytReady && ytPlayer ? ytPlayer.getCurrentTime() || 0 : 0;
     sendHeroVideoCommand('seekTo', [current, true]);
     sendHeroVideoCommand(shouldPlay ? 'playVideo' : 'pauseVideo');
@@ -780,10 +820,11 @@ function loadTrack(index, shouldPlay) {
         recordPlay(track);
         playerEl.classList.add("visible");
         appEl.classList.add("player-open");
-        if (!isMobileLayout()) {
+        if (!isMobileLayout() && !isLowPowerPlayer) {
             rightPanel.classList.add("visible");
             appEl.classList.add("panel-open");
         } else {
+            rightPanel.classList.remove("visible");
             appEl.classList.remove("panel-open");
         }
     }
@@ -1290,12 +1331,58 @@ async function fetchLyrics(artist, title) {
 }
 
 // Toggle Fullscreen
-toggleFullscreen.addEventListener("click", () => {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
-    } else {
-        document.exitFullscreen().catch(() => {});
+function getFullscreenElement() {
+    return document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement;
+}
+
+function requestAppFullscreen() {
+    const target = document.documentElement;
+    const request = target.requestFullscreen ||
+        target.webkitRequestFullscreen ||
+        target.mozRequestFullScreen ||
+        target.msRequestFullscreen;
+
+    if (request) {
+        return Promise.resolve(request.call(target));
     }
+
+    document.body.classList.add("app-fullscreen");
+    return Promise.resolve();
+}
+
+function exitAppFullscreen() {
+    const exit = document.exitFullscreen ||
+        document.webkitExitFullscreen ||
+        document.mozCancelFullScreen ||
+        document.msExitFullscreen;
+
+    if (getFullscreenElement() && exit) {
+        return Promise.resolve(exit.call(document));
+    }
+
+    document.body.classList.remove("app-fullscreen");
+    return Promise.resolve();
+}
+
+toggleFullscreen.addEventListener("click", () => {
+    if (!getFullscreenElement() && !document.body.classList.contains("app-fullscreen")) {
+        requestAppFullscreen().catch(() => {
+            document.body.classList.add("app-fullscreen");
+        });
+    } else {
+        exitAppFullscreen().catch(() => {
+            document.body.classList.remove("app-fullscreen");
+        });
+    }
+});
+
+["fullscreenchange", "webkitfullscreenchange", "mozfullscreenchange", "MSFullscreenChange"].forEach((eventName) => {
+    document.addEventListener(eventName, () => {
+        document.body.classList.toggle("app-fullscreen", Boolean(getFullscreenElement()));
+    });
 });
 
 // ===== MENU CONTEXTO =====
@@ -1701,54 +1788,112 @@ function isTVDevice() {
 }
 
 function setupTVNavigation() {
-    const scrollableContainers = [
-        document.querySelector('.content'),
-        document.querySelector('.sidebar'),
-        document.querySelector('.queue-list'),
-        document.documentElement
-    ];
+    const focusableSelector = [
+        '.menu-item',
+        '.playlist-item',
+        '.mix-card',
+        '.queue-item',
+        '.round-action',
+        '.icon-button',
+        '.play-button',
+        '.favorite-btn',
+        '.more-button',
+        '.profile',
+        '.theme-picker select',
+        '.search input'
+    ].join(',');
+
+    function isVisible(el) {
+        const rect = el.getBoundingClientRect();
+        const style = window.getComputedStyle(el);
+        return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+    }
+
+    function getFocusableElements() {
+        return Array.from(document.querySelectorAll(focusableSelector)).filter(isVisible);
+    }
+
+    function focusFirstElement() {
+        const first = getFocusableElements()[0];
+        if (first) first.focus();
+    }
+
+    function moveFocus(direction) {
+        const elements = getFocusableElements();
+        if (!elements.length) return false;
+
+        const current = document.activeElement && elements.includes(document.activeElement)
+            ? document.activeElement
+            : null;
+
+        if (!current) {
+            elements[0].focus();
+            return true;
+        }
+
+        const currentRect = current.getBoundingClientRect();
+        const currentX = currentRect.left + currentRect.width / 2;
+        const currentY = currentRect.top + currentRect.height / 2;
+
+        let best = null;
+        let bestScore = Infinity;
+
+        elements.forEach((el) => {
+            if (el === current) return;
+
+            const rect = el.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            const dx = x - currentX;
+            const dy = y - currentY;
+
+            const isCandidate =
+                (direction === 'down' && dy > 8) ||
+                (direction === 'up' && dy < -8) ||
+                (direction === 'right' && dx > 8) ||
+                (direction === 'left' && dx < -8);
+
+            if (!isCandidate) return;
+
+            const primary = direction === 'down' || direction === 'up' ? Math.abs(dy) : Math.abs(dx);
+            const secondary = direction === 'down' || direction === 'up' ? Math.abs(dx) : Math.abs(dy);
+            const score = primary * 3 + secondary;
+
+            if (score < bestScore) {
+                bestScore = score;
+                best = el;
+            }
+        });
+
+        if (!best) return false;
+
+        best.focus({ preventScroll: true });
+        best.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        return true;
+    }
 
     document.addEventListener('keydown', (e) => {
         const key = e.key;
         const scrollAmount = 150;
+        const keyToDirection = {
+            ArrowUp: 'up',
+            ArrowDown: 'down',
+            ArrowLeft: 'left',
+            ArrowRight: 'right'
+        };
 
-        // Seta pra cima
-        if (key === 'ArrowUp') {
+        if (keyToDirection[key]) {
             e.preventDefault();
-            const focused = document.activeElement;
-            if (focused && focused.closest('.content')) {
-                focused.closest('.content').scrollBy(0, -scrollAmount);
-            } else {
-                window.scrollBy(0, -scrollAmount);
-            }
-        }
-
-        // Seta pra baixo
-        if (key === 'ArrowDown') {
-            e.preventDefault();
-            const focused = document.activeElement;
-            if (focused && focused.closest('.content')) {
-                focused.closest('.content').scrollBy(0, scrollAmount);
-            } else {
-                window.scrollBy(0, scrollAmount);
-            }
-        }
-
-        // Seta pra esquerda
-        if (key === 'ArrowLeft') {
-            e.preventDefault();
-            const focused = document.activeElement;
-            if (focused && focused.closest('.queue-list')) {
-                focused.closest('.queue-list').scrollBy(-scrollAmount, 0);
-            }
-        }
-
-        // Seta pra direita
-        if (key === 'ArrowRight') {
-            e.preventDefault();
-            const focused = document.activeElement;
-            if (focused && focused.closest('.queue-list')) {
-                focused.closest('.queue-list').scrollBy(scrollAmount, 0);
+            setLowPowerPlayer(true);
+            const moved = moveFocus(keyToDirection[key]);
+            if (!moved && (key === 'ArrowDown' || key === 'ArrowUp')) {
+                const focused = document.activeElement;
+                const amount = key === 'ArrowDown' ? scrollAmount : -scrollAmount;
+                if (focused && focused.closest('.content')) {
+                    focused.closest('.content').scrollBy(0, amount);
+                } else {
+                    window.scrollBy(0, amount);
+                }
             }
         }
 
@@ -1783,18 +1928,30 @@ function setupTVNavigation() {
     `;
     document.head.appendChild(style);
 
-    // Tornar cards e itens clicáveis focáveis
-    document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.mix-card, .queue-item, .menu-item, .playlist-item').forEach(el => {
+    function refreshFocusableElements() {
+        document.querySelectorAll(focusableSelector).forEach(el => {
             el.setAttribute('tabindex', '0');
         });
-    });
+    }
+
+    let refreshQueued = false;
+    function queueRefreshFocusableElements() {
+        if (refreshQueued) return;
+        refreshQueued = true;
+        requestAnimationFrame(() => {
+            refreshQueued = false;
+            refreshFocusableElements();
+        });
+    }
+
+    refreshFocusableElements();
+    if (isTVDevice()) {
+        setTimeout(focusFirstElement, 300);
+    }
 
     // Observer para adicionar tabindex em novos elementos
     const observer = new MutationObserver(() => {
-        document.querySelectorAll('.mix-card:not([tabindex]), .queue-item:not([tabindex]), .menu-item:not([tabindex]), .playlist-item:not([tabindex])').forEach(el => {
-            el.setAttribute('tabindex', '0');
-        });
+        queueRefreshFocusableElements();
     });
     observer.observe(document.body, { childList: true, subtree: true });
 }
