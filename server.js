@@ -12,6 +12,20 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const SALT_ROUNDS = 10;
 const ACTIVE_VISITOR_TTL = 45 * 1000;
+const DATA_DIR = process.env.DATA_DIR || process.env.RAILWAY_VOLUME_MOUNT_PATH || __dirname;
+
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+
+function getDataFile(name) {
+    const target = path.join(DATA_DIR, name);
+    const legacy = path.join(__dirname, name);
+
+    if (target !== legacy && !fs.existsSync(target) && fs.existsSync(legacy)) {
+        fs.copyFileSync(legacy, target);
+    }
+
+    return target;
+}
 
 // ===== yt-dlp =====
 function findYtDlp() {
@@ -67,7 +81,7 @@ function setCache(type, query, limit, results) {
 }
 
 // ===== USUARIOS (JSON file) =====
-const USERS_FILE = path.join(__dirname, '.users.json');
+const USERS_FILE = getDataFile('.users.json');
 
 function loadUsers() {
     try { return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8')); }
@@ -132,8 +146,42 @@ function savePlaylists(data) {
 }
 
 // ===== VISIT STATS =====
-const VISITORS_FILE = path.join(__dirname, '.visitors.json');
+const VISITORS_FILE = getDataFile('.visitors.json');
 const activeVisitors = new Map();
+const VISITOR_COOKIE = 'camadaplay_visitor_id';
+
+function parseCookies(req) {
+    return String(req.headers.cookie || '')
+        .split(';')
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .reduce((cookies, item) => {
+            const index = item.indexOf('=');
+            if (index === -1) return cookies;
+            const key = decodeURIComponent(item.slice(0, index).trim());
+            const value = decodeURIComponent(item.slice(index + 1).trim());
+            cookies[key] = value;
+            return cookies;
+        }, {});
+}
+
+function createVisitorId() {
+    return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${crypto.randomBytes(8).toString('hex')}`;
+}
+
+function normalizeVisitorId(value) {
+    const visitorId = String(value || '').trim();
+    return visitorId && visitorId.length <= 80 ? visitorId : '';
+}
+
+function setVisitorCookie(res, visitorId) {
+    res.cookie(VISITOR_COOKIE, visitorId, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 1000 * 60 * 60 * 24 * 365
+    });
+}
 
 function loadVisitors() {
     try {
@@ -180,16 +228,22 @@ app.get('/', (req, res) => {
 });
 
 app.post('/api/stats/visit', (req, res) => {
-    const visitorId = String(req.body?.visitorId || '').trim();
+    const cookies = parseCookies(req);
+    const cookieVisitorId = normalizeVisitorId(cookies[VISITOR_COOKIE]);
+    const bodyVisitorId = normalizeVisitorId(req.body?.visitorId);
+    const visitorId = cookieVisitorId || bodyVisitorId || createVisitorId();
     const username = String(req.body?.username || '').trim();
 
     if (!visitorId || visitorId.length > 80) {
         return res.status(400).json({ error: 'Visitante inválido.' });
     }
 
+    setVisitorCookie(res, visitorId);
+
     const visitorsData = loadVisitors();
     const users = loadUsers();
     const now = Date.now();
+    const activeId = username && users[username] ? `user:${username}` : `visitor:${visitorId}`;
 
     if (username && users[username]) {
         delete visitorsData.visitors[visitorId];
@@ -203,7 +257,7 @@ app.post('/api/stats/visit', (req, res) => {
 
     saveVisitors(visitorsData);
 
-    activeVisitors.set(visitorId, now);
+    activeVisitors.set(activeId, now);
     res.json(getVisitStats());
 });
 

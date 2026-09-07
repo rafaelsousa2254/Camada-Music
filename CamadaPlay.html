@@ -293,6 +293,10 @@
             <button class="icon-button ghost" type="button" id="bottomShuffle" aria-label="Aleatório"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M16 3h5v5h-2V6.4l-3.9 3.9-1.4-1.4L17.6 5H16zM4 7h3.5c1.4 0 2.6.6 3.5 1.6l6.6 7H21v2h-4.3l-7.2-7.6A2.8 2.8 0 0 0 7.5 9H4zm9.7 8.1 1.4-1.4 2.5 2.5V14h2v5h-5v-2h1.8zM4 17h3.5c.8 0 1.5-.3 2-.9l1.1-1.2 1.5 1.4-1.2 1.2A4.8 4.8 0 0 1 7.5 19H4z"/></svg></button>
             <button class="icon-button" type="button" id="prevTrack" aria-label="Música anterior"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 5h2v14H6zM19 6v12L9 12z"/></svg></button>
             <button class="icon-button play-button" type="button" id="playPause" aria-label="Tocar"><svg class="icon-play" aria-hidden="true" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="icon-pause" aria-hidden="true" viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg></button>
+            <div class="mobile-volume" id="mobileVolumeBox">
+                <button class="icon-button ghost" type="button" id="mobileVolumeToggle" aria-label="Volume" aria-expanded="false"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zm11.5 1.2a3 3 0 0 1 0 3.6l1.7 1.1a5 5 0 0 0 0-5.8z"/></svg></button>
+                <input type="range" id="mobileVolumeControl" min="0" max="100" value="100" aria-label="Volume">
+            </div>
             <button class="icon-button" type="button" id="nextTrack" aria-label="Próxima música"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM5 6v12l10-6z"/></svg></button>
             <button class="icon-button ghost" type="button" id="bottomRepeat" aria-label="Repetir"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 7h10l-2-2 1.4-1.4L21 8l-4.6 4.4L15 11l2-2H7a3 3 0 0 0-3 3v1H2v-1a5 5 0 0 1 5-5zm10 10H7l2 2-1.4 1.4L3 16l4.6-4.4L9 13l-2 2h10a3 3 0 0 0 3-3v-1h2v1a5 5 0 0 1-5 5z"/></svg></button>
         </div>
@@ -306,9 +310,9 @@
         </div>
 
         <div class="bottom-tools">
-            <div class="volume">
-                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zm11.5 1.2a3 3 0 0 1 0 3.6l1.7 1.1a5 5 0 0 0 0-5.8z"/></svg>
-                <input type="range" id="volumeControl" min="0" max="100" value="70" aria-label="Volume">
+            <div class="volume" id="volumeBox">
+                <button class="volume-toggle" type="button" id="volumeToggle" aria-label="Volume" aria-expanded="false"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zm11.5 1.2a3 3 0 0 1 0 3.6l1.7 1.1a5 5 0 0 0 0-5.8z"/></svg></button>
+                <input type="range" id="volumeControl" min="0" max="100" value="100" aria-label="Volume">
             </div>
             <button class="icon-button ghost" type="button" aria-label="Letra" id="toggleLyrics"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 4h12v16H6zm2 2v12h8V6zm2 2h4v2h-4zm0 4h4v2h-4z"/></svg></button>
             <button class="icon-button ghost" type="button" aria-label="Tela cheia" id="toggleFullscreen"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 4h7v2H7.4l4.1 4.1-1.4 1.4L6 7.4V11H4zm9 0h7v7h-2V7.4l-4.1 4.1-1.4-1.4L16.6 6H13zM4 13h2v3.6l4.1-4.1 1.4 1.4L7.4 18H11v2H4zm14 0h2v7h-7v-2h3.6l-4.1-4.1 1.4-1.4 4.1 4.1z"/></svg></button>

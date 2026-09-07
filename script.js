@@ -40,6 +40,11 @@ const playerEl = document.querySelector(".player");
 const appEl = document.querySelector(".app");
 const visitorTotal = document.querySelector("#visitorTotal");
 const visitorActive = document.querySelector("#visitorActive");
+const volumeBox = document.querySelector("#volumeBox");
+const volumeToggle = document.querySelector("#volumeToggle");
+const mobileVolumeBox = document.querySelector("#mobileVolumeBox");
+const mobileVolumeToggle = document.querySelector("#mobileVolumeToggle");
+const mobileVolumeControl = document.querySelector("#mobileVolumeControl");
 
 const API_BASE = window.location.origin;
 const FAVORITES_KEY = "camadaplay:favoritos_v2";
@@ -48,6 +53,7 @@ const SEARCH_HISTORY_KEY = "camadaplay:pesquisas_v1";
 const THEME_KEY = "camadaplay:theme_v1";
 const VISITOR_ID_KEY = "camadaplay:visitor_id_v1";
 const VOLUME_KEY = "camadaplay:volume_v1";
+const DEFAULT_VOLUME = 100;
 const COVER_CLASSES = ["cover-one", "cover-two", "cover-three", "cover-four"];
 const THEMES = new Set(["default", "anos80", "ashley-graves", "asta", "coco-atelier", "cyberpunk", "demon-slayer", "frieren", "hacker", "hello-kitty", "rikka-takanashi", "kaguya-sama", "anya-forger", "komi-san", "megumin-konosuba", "hello-kitty-kuromi", "japao", "naruto", "sakura", "sono-bisque-doll", "suzuki"]);
 const CATEGORY_KEYWORDS = [
@@ -126,14 +132,16 @@ function getSavedProfileVolume() {
 function setPlayerVolume(volume) {
     const nextVolume = Math.max(0, Math.min(100, Number(volume) || 0));
     volumeControl.value = nextVolume;
+    if (mobileVolumeControl) mobileVolumeControl.value = nextVolume;
     if (ytReady && ytPlayer) {
+        if (nextVolume > 0 && ytPlayer.unMute) ytPlayer.unMute();
         ytPlayer.setVolume(nextVolume);
     }
 }
 
 function applyProfileVolume() {
     const savedVolume = getSavedProfileVolume();
-    setPlayerVolume(savedVolume ?? 70);
+    setPlayerVolume(savedVolume ?? DEFAULT_VOLUME);
 }
 
 function saveProfileVolume(volume) {
@@ -836,8 +844,10 @@ function loadTrack(index, shouldPlay) {
 
     try {
         ytPlayer.loadVideoById(track.id);
+        applyProfileVolume();
         embedHeroVideo(track.id, 0);
         if (shouldPlay) {
+            if (ytPlayer.unMute) ytPlayer.unMute();
             ytPlayer.playVideo();
             playing = true;
             setPlayState(true);
@@ -870,6 +880,8 @@ function togglePlay() {
         ytPlayer.pauseVideo();
         syncHeroVideoPlayback(false);
     } else {
+        applyProfileVolume();
+        if (ytPlayer.unMute) ytPlayer.unMute();
         ytPlayer.playVideo();
         syncHeroVideoPlayback(true);
     }
@@ -1268,6 +1280,36 @@ mobileProgressControl.addEventListener("input", () => seekFromProgress(mobilePro
 volumeControl.addEventListener("input", () => {
     setPlayerVolume(volumeControl.value);
     saveProfileVolume(volumeControl.value);
+});
+
+mobileVolumeControl?.addEventListener("input", () => {
+    setPlayerVolume(mobileVolumeControl.value);
+    saveProfileVolume(mobileVolumeControl.value);
+});
+
+mobileVolumeToggle?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const expanded = mobileVolumeBox.classList.toggle("open");
+    mobileVolumeToggle.setAttribute("aria-expanded", String(expanded));
+});
+
+volumeToggle?.addEventListener("click", (event) => {
+    if (!isMobileLayout()) return;
+    event.stopPropagation();
+    const expanded = volumeBox.classList.toggle("open");
+    volumeToggle.setAttribute("aria-expanded", String(expanded));
+});
+
+document.addEventListener("click", (event) => {
+    if (mobileVolumeBox?.classList.contains("open") && !mobileVolumeBox.contains(event.target)) {
+        mobileVolumeBox.classList.remove("open");
+        mobileVolumeToggle?.setAttribute("aria-expanded", "false");
+    }
+
+    if (!volumeBox || !isMobileLayout() || !volumeBox.classList.contains("open")) return;
+    if (volumeBox.contains(event.target)) return;
+    volumeBox.classList.remove("open");
+    volumeToggle?.setAttribute("aria-expanded", "false");
 });
 
 // Inicializar

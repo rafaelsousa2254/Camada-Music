@@ -1598,8 +1598,21 @@ svg {
     color: var(--muted);
 }
 
+.volume-toggle {
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+}
+
 .volume input {
     width: 150px;
+}
+
+.mobile-volume {
+    display: none;
 }
 
 /* ===== RESPONSIVO ===== */
@@ -1681,7 +1694,7 @@ svg {
         height: auto;
         min-height: 100vh;
         overflow: visible;
-        padding: 10px 10px 132px;
+        padding: 10px 10px 112px;
     }
 
     .app.player-open,
@@ -1899,7 +1912,7 @@ svg {
     .player {
         grid-template-columns: minmax(0, 1fr) auto;
         gap: 10px;
-        min-height: 124px;
+        min-height: 104px;
         padding: 8px 10px 10px;
         border-radius: 0;
     }
@@ -1923,11 +1936,12 @@ svg {
     }
 
     .bottom-controls {
+        position: relative;
         gap: 8px;
     }
 
     .bottom-controls .icon-button.ghost {
-        display: none;
+        display: grid;
     }
 
     .bottom-controls .icon-button {
@@ -1938,6 +1952,10 @@ svg {
     .bottom-controls .play-button {
         width: 54px;
         height: 54px;
+    }
+
+    .bottom-controls #bottomShuffle {
+        display: none;
     }
 
     .mobile-progress {
@@ -1960,36 +1978,88 @@ svg {
     }
 
     .bottom-tools {
-        display: flex;
-        grid-column: 1 / -1;
-        align-items: center;
-        justify-content: stretch;
-        gap: 0;
-        width: 100%;
-        padding: 0 2px;
-    }
-
-    .bottom-tools > button {
         display: none;
     }
 
-    .bottom-tools .volume {
-        flex: 1;
-        gap: 8px;
-        min-width: 0;
-        padding: 2px 0;
+    .mobile-volume {
+        display: flex;
+        position: relative;
+        color: var(--soft);
     }
 
-    .bottom-tools .volume svg {
-        width: 16px;
-        height: 16px;
-        flex: 0 0 auto;
+    .mobile-volume input {
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 14px);
+        width: 112px;
+        max-width: none;
+        transform: translateX(-50%) rotate(-90deg);
+        transform-origin: center;
+        opacity: 0;
+        pointer-events: none;
+        accent-color: var(--blue);
     }
 
-    .bottom-tools .volume input {
-        width: 100%;
-        min-width: 0;
+    .mobile-volume.open input {
+        opacity: 1;
+        pointer-events: auto;
     }
+}
+
+body.playstation-mode .app {
+    display: grid;
+    grid-template-columns: 250px minmax(0, 1fr);
+    height: 100vh;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0;
+}
+
+body.playstation-mode .app.player-open {
+    height: calc(100vh - 76px);
+}
+
+body.playstation-mode .sidebar {
+    position: relative;
+    top: auto;
+    z-index: auto;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    padding: 36px 16px 16px;
+    border-right: 1px solid var(--line);
+    border-bottom: 0;
+    overflow-y: auto;
+}
+
+body.playstation-mode .brand-top {
+    margin: 0 0 34px;
+    padding: 0;
+}
+
+body.playstation-mode .menu {
+    display: grid;
+    gap: 10px;
+    overflow: visible;
+    padding-bottom: 0;
+}
+
+body.playstation-mode .menu-item {
+    width: 100%;
+    min-height: 46px;
+    gap: 16px;
+    padding: 0 14px;
+    font-size: .94rem;
+    white-space: normal;
+}
+
+body.playstation-mode .playlist-block {
+    display: grid;
+}
+
+body.playstation-mode .content {
+    height: 100%;
+    overflow-y: auto;
 }
 
 /* ===== MODAL AUTH ===== */
