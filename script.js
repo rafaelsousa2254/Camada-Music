@@ -845,7 +845,7 @@ function loadTrack(index, shouldPlay) {
         recordPlay(track);
         playerEl.classList.add("visible");
         appEl.classList.add("player-open");
-        if (!isMobileLayout() && !IS_PLAYSTATION) {
+        if (!isMobileLayout()) {
             rightPanel.classList.add("visible");
             appEl.classList.add("panel-open");
         } else {
