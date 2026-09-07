@@ -158,6 +158,10 @@ function applyTheme(theme) {
 
 applyTheme(localStorage.getItem(THEME_KEY) || "default");
 
+const FIRST_VISIT_KEY = "camadaplay:first_visit_v1";
+const TOTAL_VISITS_KEY = "camadaplay:total_visits_v1";
+const UNIQUE_DEVICES_KEY = "camadaplay:unique_devices_v1";
+
 function getVisitorId() {
     let visitorId = localStorage.getItem(VISITOR_ID_KEY);
     if (!visitorId) {
@@ -167,25 +171,39 @@ function getVisitorId() {
     return visitorId;
 }
 
+function getFirstVisit() {
+    let firstVisit = localStorage.getItem(FIRST_VISIT_KEY);
+    if (!firstVisit) {
+        firstVisit = String(Date.now());
+        localStorage.setItem(FIRST_VISIT_KEY, firstVisit);
+    }
+    return Number(firstVisit) || Date.now();
+}
+
 function renderVisitStats(stats) {
     if (!visitorTotal || !visitorActive || !stats) return;
     visitorTotal.textContent = stats.total ?? 0;
     visitorActive.textContent = stats.active ?? 0;
+    if (stats.total != null) localStorage.setItem(TOTAL_VISITS_KEY, String(stats.total));
+    if (stats.uniqueDevices != null) localStorage.setItem(UNIQUE_DEVICES_KEY, String(stats.uniqueDevices));
 }
 
-async function sendVisitHeartbeat() {
+function sendVisitHeartbeat() {
     try {
         const session = getSession();
-        const response = await fetch(`${API_BASE}/api/stats/visit`, {
+        fetch(`${API_BASE}/api/stats/visit`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 visitorId: getVisitorId(),
-                username: session?.username || null
+                username: session?.username || null,
+                firstVisit: getFirstVisit(),
+                totalVisits: Number(localStorage.getItem(TOTAL_VISITS_KEY)) || 0,
+                uniqueDevices: Number(localStorage.getItem(UNIQUE_DEVICES_KEY)) || 0
             })
+        }).then(r => r.ok ? r.json() : null).then(data => {
+            if (data) renderVisitStats(data);
         });
-        if (!response.ok) return;
-        renderVisitStats(await response.json());
     } catch (error) {
         console.warn("[STATS] Não foi possível atualizar os acessos:", error.message);
     }

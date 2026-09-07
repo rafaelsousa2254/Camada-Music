@@ -134,7 +134,7 @@ function requireUser(req, res, username = null) {
 }
 
 // ===== PLAYLISTS (JSON file) =====
-const PLAYLISTS_FILE = path.join(__dirname, '.playlists.json');
+const PLAYLISTS_FILE = getDataFile('.playlists.json');
 
 function loadPlaylists() {
     try { return JSON.parse(fs.readFileSync(PLAYLISTS_FILE, 'utf8')); }
@@ -147,6 +147,7 @@ function savePlaylists(data) {
 
 // ===== VISIT STATS =====
 const VISITORS_FILE = getDataFile('.visitors.json');
+const COUNTERS_FILE = getDataFile('.counters.json');
 const activeVisitors = new Map();
 const VISITOR_COOKIE = 'camadaplay_visitor_id';
 
@@ -196,6 +197,18 @@ function saveVisitors(data) {
     fs.writeFileSync(VISITORS_FILE, JSON.stringify(data, null, 2));
 }
 
+function loadCounters() {
+    try {
+        return JSON.parse(fs.readFileSync(COUNTERS_FILE, 'utf8'));
+    } catch {
+        return { totalVisits: 0, uniqueDevices: 0 };
+    }
+}
+
+function saveCounters(data) {
+    fs.writeFileSync(COUNTERS_FILE, JSON.stringify(data, null, 2));
+}
+
 function pruneActiveVisitors() {
     const now = Date.now();
     for (const [id, lastSeen] of activeVisitors.entries()) {
@@ -209,12 +222,14 @@ function getVisitStats() {
     pruneActiveVisitors();
     const usersTotal = Object.keys(loadUsers()).length;
     const visitorsTotal = Object.keys(loadVisitors().visitors).length;
+    const counters = loadCounters();
 
     return {
-        total: usersTotal + visitorsTotal,
+        total: counters.totalVisits || usersTotal + visitorsTotal,
         active: activeVisitors.size,
         users: usersTotal,
-        visitors: visitorsTotal
+        visitors: visitorsTotal,
+        uniqueDevices: counters.uniqueDevices || visitorsTotal
     };
 }
 
@@ -233,6 +248,9 @@ app.post('/api/stats/visit', (req, res) => {
     const bodyVisitorId = normalizeVisitorId(req.body?.visitorId);
     const visitorId = cookieVisitorId || bodyVisitorId || createVisitorId();
     const username = String(req.body?.username || '').trim();
+    const clientFirstVisit = Number(req.body?.firstVisit) || 0;
+    const clientTotalVisits = Number(req.body?.totalVisits) || 0;
+    const clientUniqueDevices = Number(req.body?.uniqueDevices) || 0;
 
     if (!visitorId || visitorId.length > 80) {
         return res.status(400).json({ error: 'Visitante inválido.' });
@@ -242,20 +260,41 @@ app.post('/api/stats/visit', (req, res) => {
 
     const visitorsData = loadVisitors();
     const users = loadUsers();
+    const counters = loadCounters();
     const now = Date.now();
     const activeId = username && users[username] ? `user:${username}` : `visitor:${visitorId}`;
+
+    let isNewVisitor = false;
 
     if (username && users[username]) {
         delete visitorsData.visitors[visitorId];
     } else {
         if (!visitorsData.visitors[visitorId]) {
-            visitorsData.visitors[visitorId] = { firstSeen: now, lastSeen: now };
+            const firstSeen = clientFirstVisit && clientFirstVisit < now ? clientFirstVisit : now;
+            visitorsData.visitors[visitorId] = { firstSeen, lastSeen: now };
+            isNewVisitor = true;
         } else {
             visitorsData.visitors[visitorId].lastSeen = now;
+            if (clientFirstVisit && clientFirstVisit < visitorsData.visitors[visitorId].firstSeen) {
+                visitorsData.visitors[visitorId].firstSeen = clientFirstVisit;
+            }
         }
     }
 
     saveVisitors(visitorsData);
+
+    if (isNewVisitor) {
+        counters.totalVisits += 1;
+    }
+
+    if (clientTotalVisits > counters.totalVisits) {
+        counters.totalVisits = clientTotalVisits;
+    }
+
+    const currentUniqueDevices = Object.keys(visitorsData.visitors).length;
+    counters.uniqueDevices = Math.max(counters.uniqueDevices, currentUniqueDevices, clientUniqueDevices);
+
+    saveCounters(counters);
 
     activeVisitors.set(activeId, now);
     res.json(getVisitStats());
