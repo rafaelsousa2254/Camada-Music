@@ -264,15 +264,12 @@ app.post('/api/stats/visit', (req, res) => {
     const now = Date.now();
     const activeId = username && users[username] ? `user:${username}` : `visitor:${visitorId}`;
 
-    let isNewVisitor = false;
-
     if (username && users[username]) {
         delete visitorsData.visitors[visitorId];
     } else {
         if (!visitorsData.visitors[visitorId]) {
             const firstSeen = clientFirstVisit && clientFirstVisit < now ? clientFirstVisit : now;
             visitorsData.visitors[visitorId] = { firstSeen, lastSeen: now };
-            isNewVisitor = true;
         } else {
             visitorsData.visitors[visitorId].lastSeen = now;
             if (clientFirstVisit && clientFirstVisit < visitorsData.visitors[visitorId].firstSeen) {
@@ -283,11 +280,9 @@ app.post('/api/stats/visit', (req, res) => {
 
     saveVisitors(visitorsData);
 
-    if (isNewVisitor) {
+    if (clientTotalVisits === 0) {
         counters.totalVisits += 1;
-    }
-
-    if (clientTotalVisits > counters.totalVisits) {
+    } else if (clientTotalVisits > counters.totalVisits) {
         counters.totalVisits = clientTotalVisits;
     }
 
