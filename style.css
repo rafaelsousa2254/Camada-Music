@@ -1755,9 +1755,35 @@ svg {
     }
 
     .visitor-stats {
-        flex: 0 1 170px;
-        justify-content: center;
-        padding: 0 10px;
+        position: fixed;
+        top: 12px;
+        right: 12px;
+        z-index: 40;
+        min-height: 34px;
+        gap: 7px;
+        padding: 0 9px;
+        border-radius: 7px;
+        background: color-mix(in srgb, var(--panel-strong) 82%, transparent);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, .24);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+    }
+
+    .visitor-stats svg {
+        width: 15px;
+        height: 15px;
+    }
+
+    .visitor-stats span {
+        min-width: 25px;
+    }
+
+    .visitor-stats strong {
+        font-size: .78rem;
+    }
+
+    .visitor-stats small {
+        font-size: .48rem;
     }
 
     .profile {
