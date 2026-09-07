@@ -498,13 +498,6 @@ body {
     font-family: "Inter", Arial, sans-serif;
 }
 
-body.playstation-mode *,
-body.playstation-mode *::before,
-body.playstation-mode *::after {
-    transition-duration: .01ms !important;
-    animation-duration: .01ms !important;
-}
-
 body.playstation-mode .hero-video {
     display: none !important;
 }
@@ -1989,7 +1982,7 @@ svg {
     .mobile-volume input {
         position: absolute;
         left: 50%;
-        bottom: calc(100% + 24px);
+        bottom: calc(100% + 36px);
         width: 112px;
         max-width: none;
         transform: translateX(-50%) rotate(-90deg);
