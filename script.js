@@ -1671,3 +1671,110 @@ function setupDownloadButton() {
 }
 
 setupDownloadButton();
+
+// ===== NAVEGAÇÃO POR CONTROLE (TV) =====
+function isTVDevice() {
+    return /SmartTV|smarttv|TV|WebTV|NetCast|webos|Tizen|Orbitu/i.test(navigator.userAgent) || 
+           (window.innerWidth > 1000 && window.innerHeight > 500 && !('ontouchstart' in window));
+}
+
+function setupTVNavigation() {
+    const scrollableContainers = [
+        document.querySelector('.content'),
+        document.querySelector('.sidebar'),
+        document.querySelector('.queue-list'),
+        document.documentElement
+    ];
+
+    document.addEventListener('keydown', (e) => {
+        const key = e.key;
+        const scrollAmount = 150;
+
+        // Seta pra cima
+        if (key === 'ArrowUp') {
+            e.preventDefault();
+            const focused = document.activeElement;
+            if (focused && focused.closest('.content')) {
+                focused.closest('.content').scrollBy(0, -scrollAmount);
+            } else {
+                window.scrollBy(0, -scrollAmount);
+            }
+        }
+
+        // Seta pra baixo
+        if (key === 'ArrowDown') {
+            e.preventDefault();
+            const focused = document.activeElement;
+            if (focused && focused.closest('.content')) {
+                focused.closest('.content').scrollBy(0, scrollAmount);
+            } else {
+                window.scrollBy(0, scrollAmount);
+            }
+        }
+
+        // Seta pra esquerda
+        if (key === 'ArrowLeft') {
+            e.preventDefault();
+            const focused = document.activeElement;
+            if (focused && focused.closest('.queue-list')) {
+                focused.closest('.queue-list').scrollBy(-scrollAmount, 0);
+            }
+        }
+
+        // Seta pra direita
+        if (key === 'ArrowRight') {
+            e.preventDefault();
+            const focused = document.activeElement;
+            if (focused && focused.closest('.queue-list')) {
+                focused.closest('.queue-list').scrollBy(scrollAmount, 0);
+            }
+        }
+
+        // Botão OK/Enter
+        if (key === 'Enter') {
+            const focused = document.activeElement;
+            if (focused && focused.tagName !== 'INPUT') {
+                focused.click();
+            }
+        }
+    });
+
+    // Foco visível em elementos clicáveis
+    const style = document.createElement('style');
+    style.textContent = `
+        *:focus {
+            outline: 2px solid var(--blue) !important;
+            outline-offset: 2px;
+        }
+        .mix-card:focus,
+        .queue-item:focus,
+        .menu-item:focus,
+        .playlist-item:focus {
+            background: linear-gradient(90deg, rgba(var(--accent-rgb), .34), rgba(var(--accent-rgb), .08)) !important;
+            transform: scale(1.02);
+            transition: all .15s ease;
+        }
+        button:focus {
+            outline: 2px solid var(--blue) !important;
+            outline-offset: 2px;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Tornar cards e itens clicáveis focáveis
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.mix-card, .queue-item, .menu-item, .playlist-item').forEach(el => {
+            el.setAttribute('tabindex', '0');
+        });
+    });
+
+    // Observer para adicionar tabindex em novos elementos
+    const observer = new MutationObserver(() => {
+        document.querySelectorAll('.mix-card:not([tabindex]), .queue-item:not([tabindex]), .menu-item:not([tabindex]), .playlist-item:not([tabindex])').forEach(el => {
+            el.setAttribute('tabindex', '0');
+        });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+}
+
+setupTVNavigation();
