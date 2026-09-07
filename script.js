@@ -1650,3 +1650,24 @@ function resetPlayer() {
 }
 
 updateProfileUI();
+
+// ===== BOTAO DOWNLOAD APP =====
+const downloadBtn = document.getElementById("downloadApp");
+const APK_URL = "https://github.com/rafaelsousa2254/Camada-Music/releases/download/v1.0.0/CamadaPlay.apk";
+
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+function setupDownloadButton() {
+    if (!downloadBtn) return;
+    
+    if (isMobileDevice()) {
+        downloadBtn.href = APK_URL;
+        downloadBtn.style.display = "flex";
+    } else {
+        downloadBtn.style.display = "none";
+    }
+}
+
+setupDownloadButton();

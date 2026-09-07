@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.CamadaMusic" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#0D7CFF</item>
+        <item name="colorPrimaryDark">#05255D</item>
+        <item name="colorAccent">#4BA5FF</item>
+        <item name="android:windowBackground">#020815</item>
+        <item name="android:statusBarColor">#020815</item>
+        <item name="android:navigationBarColor">#020815</item>
+        <item name="android:windowFullscreen">false</item>
+    </style>
+</resources>

@@ -2264,3 +2264,30 @@ svg {
     height: 18px;
     color: var(--blue-soft);
 }
+
+/* ===== BOTAO DOWNLOAD APP ===== */
+.download-btn {
+    display: none !important;
+    margin-top: 12px;
+    background: linear-gradient(135deg, var(--blue), var(--blue-dark)) !important;
+    color: #fff !important;
+    font-weight: 700;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 16px rgba(var(--accent-rgb), .4);
+    transition: transform .2s, box-shadow .2s;
+}
+
+.download-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(var(--accent-rgb), .6);
+}
+
+.download-btn svg {
+    color: #fff;
+}
+
+@media (max-width: 860px) {
+    .download-btn {
+        display: flex !important;
+    }
+}
