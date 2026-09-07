@@ -1,13 +1,9 @@
 node_modules/
 .env
 .cache/
-.build-tools/
 .users.json
 .playlists.json
 .visitors.json
-android/.gradle/
-android/app/build/
-android/local.properties
 abrir_camadaplay.bat
 *.log
 .DS_Store
