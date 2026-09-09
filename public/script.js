@@ -879,8 +879,10 @@ function renderPlayer() {
     playerArtist.textContent = track.artist;
     sideTitle.textContent = track.title;
     sideArtist.textContent = track.artist;
-    sideDurationTime.textContent = formatTime(currentDuration || track.durationSeconds);
-    mobileDurationTime.textContent = formatTime(currentDuration || track.durationSeconds);
+    if (!playing) {
+        sideDurationTime.textContent = formatTime(currentDuration || track.durationSeconds);
+        mobileDurationTime.textContent = formatTime(currentDuration || track.durationSeconds);
+    }
     setCoverImage(playerCover, track);
     setCoverImage(sideCover, track);
     heroCover.innerHTML = track.image ? `<img src="${escapeHtml(track.image)}" alt="">` : '';
@@ -1453,6 +1455,7 @@ searchInput.addEventListener("input", () => {
 
 // ===== PROGRESSO =====
 setInterval(() => {
+    if (isMobileLayout()) return;
     if (ytReady && ytPlayer && playing) {
         const current = ytPlayer.getCurrentTime() || 0;
         const duration = ytPlayer.getDuration() || 0;
@@ -1469,20 +1472,14 @@ setInterval(() => {
 }, 500);
 
 function seekFromProgress(control) {
-    if (isMobileLayout() && mobileAudio && mobileAudio.duration > 0) {
-        const seekTo = (Number(control.value) / 100) * mobileAudio.duration;
-        mobileAudio.currentTime = seekTo;
-        sideProgressControl.value = control.value;
-        mobileProgressControl.value = control.value;
-        sideCurrentTime.textContent = formatTime(seekTo);
-        mobileCurrentTime.textContent = formatTime(seekTo);
-    } else if (ytReady && ytPlayer && currentDuration > 0) {
+    if (ytReady && ytPlayer && currentDuration > 0) {
         const seekTo = (Number(control.value) / 100) * currentDuration;
         ytPlayer.seekTo(seekTo, true);
         sendHeroVideoCommand('seekTo', [seekTo, true]);
         sideProgressControl.value = control.value;
         mobileProgressControl.value = control.value;
         sideCurrentTime.textContent = formatTime(seekTo);
+        mobileCurrentTime.textContent = formatTime(seekTo);
         mobileCurrentTime.textContent = formatTime(seekTo);
     }
 }
