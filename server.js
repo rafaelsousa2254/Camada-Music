@@ -234,10 +234,19 @@ function getVisitStats() {
 // ===== MIDDLEWARE =====
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
-app.use(express.static(__dirname, { dotfiles: 'deny' }));
+app.use(express.static(path.join(__dirname, 'public')));
+
+// ===== APK DOWNLOAD =====
+app.get('/camadaplay-tv.apk', (req, res) => {
+    const apkPath = path.join(__dirname, 'apks', 'camadaplay-tv.apk');
+    if (!fs.existsSync(apkPath)) {
+        return res.status(404).send('APK não encontrado');
+    }
+    res.download(apkPath, 'camadaplay-tv.apk');
+});
 
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/CamadaPlay.html');
+    res.sendFile(path.join(__dirname, 'public', 'CamadaPlay.html'));
 });
 
 app.post('/api/stats/visit', (req, res) => {

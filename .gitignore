@@ -8,3 +8,4 @@ abrir_camadaplay.bat
 *.log
 .DS_Store
 Thumbs.db
+*.apk

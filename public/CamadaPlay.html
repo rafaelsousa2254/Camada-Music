@@ -8,6 +8,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css?t=1725650011">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0d7cff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CamadaPlay">
+    <link rel="apple-touch-icon" href="assets/icon-192.svg">
 </head>
 <body>
     <main class="app">
@@ -57,11 +63,51 @@
                     <svg class="menu-icon-neon menu-icon-heart" aria-hidden="true" viewBox="0 0 32 32"><path d="M16 26.5S6.5 20.7 6.5 12.8c0-3.4 2.4-5.8 5.4-5.8 1.9 0 3.3 1 4.1 2.4C16.8 8 18.2 7 20.1 7c3 0 5.4 2.4 5.4 5.8 0 7.9-9.5 13.7-9.5 13.7z"/></svg>
                     <span>Músicas Curtidas</span>
                 </button>
-                <a class="menu-item download-btn" href="https://github.com/rafaelsousa2254/Camada-Music/releases/download/v1.0.0/CamadaPlay.apk" target="_blank" id="downloadApp">
+                <a class="menu-item download-btn" id="downloadApp">
                     <svg class="menu-icon-neon" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 16l-6-6h4V4h4v6h4l-6 6z"/><path d="M4 20h16v-2H4v2z"/></svg>
-                    <span>Baixar App</span>
+                    <span>Instalar App</span>
                 </a>
+                <button class="menu-item tv-download-btn" id="tvDownloadBtn" type="button">
+                    <svg class="menu-icon-neon" aria-hidden="true" viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
+                    <span>App para TV</span>
+                </button>
             </nav>
+
+            <!-- Modal TV App -->
+            <div class="tv-modal" id="tvModal">
+                <div class="tv-modal-content">
+                    <button class="tv-modal-close" id="tvModalClose" type="button">&times;</button>
+                    <h2>CamadaPlay para TV</h2>
+                    <p class="tv-modal-subtitle">Instale o app na sua Smart TV</p>
+                    
+                    <div class="tv-qr-container">
+                        <img id="tvQrCode" alt="QR Code para baixar o app TV">
+                        <p class="tv-qr-hint">Escaneie com a câmera do celular</p>
+                    </div>
+
+                    <div class="tv-modal-steps">
+                        <div class="tv-step">
+                            <span class="tv-step-num">1</span>
+                            <p>Escaneie o QR Code e baixe o APK</p>
+                        </div>
+                        <div class="tv-step">
+                            <span class="tv-step-num">2</span>
+                            <p>Copie o arquivo para um pendrive USB</p>
+                        </div>
+                        <div class="tv-step">
+                            <span class="tv-step-num">3</span>
+                            <p>Conecte o pendrive na TV e instale</p>
+                        </div>
+                    </div>
+
+                    <a class="tv-download-link" href="#" id="tvDownloadLink" target="_blank">
+                        <svg viewBox="0 0 24 24"><path d="M12 16l-6-6h4V4h4v6h4l-6 6z"/></svg>
+                        Baixar APK
+                    </a>
+
+                    <p class="tv-modal-note">* A TV precisa permitir instalação de fontes desconhecidas</p>
+                </div>
+            </div>
 
             <section class="user-indicator" id="userIndicator">
                 <span class="user-indicator-avatar" id="userIndicatorAvatar"></span>
@@ -70,9 +116,11 @@
 
             <section class="playlist-block">
                 <div class="playlist-title">
-                    <span>Playlists</span>
-                    <button type="button" aria-label="Adicionar playlist">+</button>
+                    <span>Suas Playlists</span>
+                    <button type="button" id="createPlaylistBtn" aria-label="Adicionar playlist"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 5v14M5 12h14"/></svg></button>
                 </div>
+                <div id="userPlaylistsList"></div>
+                <hr class="playlist-divider">
                 <button class="playlist-item active" type="button" data-query="week discoveries" data-type="mood"><span class="thumb thumb-one"></span>Descobertas da Semana</button>
                 <button class="playlist-item" type="button" data-query="night vibes" data-type="mood"><span class="thumb thumb-two"></span>Vibes Noturnas</button>
                 <button class="playlist-item" type="button" data-query="focus ambient" data-type="mood"><span class="thumb thumb-three"></span>Foco & Concentração</button>
@@ -107,6 +155,7 @@
                         <select id="themeSelect" aria-label="Escolher tema">
                             <option value="default">Padrão</option>
                             <option value="anos80">Anos 80</option>
+                            <option value="anya-forger">Anya Forger</option>
                             <option value="ashley-graves">Ashley Graves</option>
                             <option value="asta">Asta</option>
                             <option value="coco-atelier">Coco Atelier</option>
@@ -115,17 +164,18 @@
                             <option value="frieren">Frieren</option>
                             <option value="hacker">Hacker</option>
                             <option value="hello-kitty">Hello Kitty</option>
-                            <option value="rikka-takanashi">Rikka Takanashi</option>
+                            <option value="hello-kitty-kuromi">Hello Kitty Kuromi</option>
+                            <option value="hello-kitty-my-melody">Hello Kitty My Melody</option>
+                            <option value="japao">Japão</option>
                             <option value="kaguya-sama">Kaguya-sama</option>
-                            <option value="anya-forger">Anya Forger</option>
                             <option value="komi-san">Komi-san</option>
                             <option value="megumin-konosuba">Megumin Konosuba</option>
-                            <option value="hello-kitty-kuromi">Hello Kitty Kuromi</option>
-                            <option value="japao">Japão</option>
                             <option value="naruto">Naruto</option>
+                            <option value="rikka-takanashi">Rikka Takanashi</option>
                             <option value="sakura">Sakura</option>
                             <option value="sono-bisque-doll">Sono Bisque Doll</option>
                             <option value="suzuki">Suzuki</option>
+                            <option value="vanellope">Vanellope</option>
                         </select>
                     </label>
                     <div class="visitor-stats" id="visitorStats" title="Acessos do site">
@@ -333,10 +383,25 @@
             <svg viewBox="0 0 24 24"><path d="M12 21s-8-4.7-8-11a4.8 4.8 0 0 1 8-3.6A4.8 4.8 0 0 1 20 10c0 6.3-8 11-8 11z"/></svg>
             Favoritar
         </button>
+        <button class="context-menu-item" data-action="add-to-playlist">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Adicionar à playlist
+        </button>
         <button class="context-menu-item" data-action="share">
             <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8m-4-6l-4-4m0 0L8 6m4-4v13"/></svg>
             Compartilhar
         </button>
+    </div>
+
+    <div class="playlist-submenu" id="playlistSubmenu"></div>
+
+    <div class="playlist-modal" id="playlistModal">
+        <div class="playlist-modal-content">
+            <button class="playlist-modal-close" id="playlistModalClose" type="button">&times;</button>
+            <h2>Nova Playlist</h2>
+            <input type="text" id="playlistNameInput" placeholder="Nome da playlist" maxlength="40">
+            <button class="playlist-create-btn" id="playlistCreateBtn" type="button">Criar</button>
+        </div>
     </div>
     <script>
         window.onYouTubeIframeAPIReady = function() {
@@ -374,5 +439,28 @@
     </script>
     <script src="https://www.youtube.com/iframe_api"></script>
     <script src="script.js?v=13"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js').then((reg) => {
+                console.log('[SW] Service Worker registrado:', reg.scope);
+            }).catch((err) => {
+                console.warn('[SW] Erro ao registrar:', err);
+            });
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            window.__pwaInstallPrompt = deferredPrompt;
+            console.log('[PWA] beforeinstallprompt capturado');
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredPrompt = null;
+            window.__pwaInstallPrompt = null;
+            console.log('[PWA] App instalado com sucesso');
+        });
+    </script>
 </body>
 </html>

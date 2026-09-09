@@ -34,6 +34,7 @@ const heroEyebrow = document.querySelector("#heroEyebrow");
 const heroText = document.querySelector("#heroText");
 const sectionTitle = document.querySelector("#sectionTitle");
 const heroVideo = document.querySelector("#heroVideo");
+const heroSection = document.querySelector(".hero");
 const themeSelect = document.querySelector("#themeSelect");
 const rightPanel = document.querySelector(".right-panel");
 const playerEl = document.querySelector(".player");
@@ -53,9 +54,10 @@ const SEARCH_HISTORY_KEY = "camadaplay:pesquisas_v1";
 const THEME_KEY = "camadaplay:theme_v1";
 const VISITOR_ID_KEY = "camadaplay:visitor_id_v1";
 const VOLUME_KEY = "camadaplay:volume_v1";
+const PLAYLISTS_KEY = "camadaplay:playlists_v1";
 const DEFAULT_VOLUME = 100;
 const COVER_CLASSES = ["cover-one", "cover-two", "cover-three", "cover-four"];
-const THEMES = new Set(["default", "anos80", "ashley-graves", "asta", "coco-atelier", "cyberpunk", "demon-slayer", "frieren", "hacker", "hello-kitty", "rikka-takanashi", "kaguya-sama", "anya-forger", "komi-san", "megumin-konosuba", "hello-kitty-kuromi", "japao", "naruto", "sakura", "sono-bisque-doll", "suzuki"]);
+const THEMES = new Set(["default", "anos80", "anya-forger", "ashley-graves", "asta", "coco-atelier", "cyberpunk", "demon-slayer", "frieren", "hacker", "hello-kitty", "hello-kitty-kuromi", "hello-kitty-my-melody", "japao", "kaguya-sama", "komi-san", "megumin-konosuba", "naruto", "rikka-takanashi", "sakura", "sono-bisque-doll", "suzuki", "vanellope"]);
 const CATEGORY_KEYWORDS = [
     { name: "funk brasileiro", terms: ["funk", "funk brasileiro", "mc ", "dj ", "mandela", "automotivo", "tamborzao", "brega funk"] },
     { name: "sertanejo", terms: ["sertanejo", "arrocha", "modao", "sofrencia", "ana castela", "gusttavo lima", "luan santana", "henrique", "juliano", "jorge e mateus"] },
@@ -96,6 +98,7 @@ let randomQueryIndex = 0;
 let pendingPlayIndex = null;
 let shufflePlayedIndices = new Set();
 let heroVideoId = null;
+const searchCache = new Map();
 
 function isMobileLayout() {
     return window.matchMedia("(max-width: 860px)").matches;
@@ -113,7 +116,7 @@ function scopedStorageKey(baseKey) {
 
 function migrateStorageToCurrentProfile() {
     if (!currentUser || !currentUser.username) return;
-    [FAVORITES_KEY, HISTORY_KEY, SEARCH_HISTORY_KEY].forEach((baseKey) => {
+    [FAVORITES_KEY, HISTORY_KEY, SEARCH_HISTORY_KEY, PLAYLISTS_KEY].forEach((baseKey) => {
         const profileKey = scopedStorageKey(baseKey);
         if (!localStorage.getItem(profileKey) && localStorage.getItem(baseKey)) {
             localStorage.setItem(profileKey, localStorage.getItem(baseKey));
@@ -374,6 +377,57 @@ function toggleFavorite(track) {
         saveFavorites(list.concat({ ...track }));
     }
     return !found;
+}
+
+// ===== PLAYLISTS =====
+function getPlaylists() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(scopedStorageKey(PLAYLISTS_KEY)));
+        return Array.isArray(saved) ? saved : [];
+    } catch {
+        return [];
+    }
+}
+
+function savePlaylists(list) {
+    localStorage.setItem(scopedStorageKey(PLAYLISTS_KEY), JSON.stringify(list));
+}
+
+function createPlaylist(name) {
+    const playlists = getPlaylists();
+    const newPlaylist = { id: crypto.randomUUID(), name, tracks: [], createdAt: Date.now() };
+    playlists.push(newPlaylist);
+    savePlaylists(playlists);
+    return newPlaylist;
+}
+
+function deletePlaylist(id) {
+    savePlaylists(getPlaylists().filter(p => p.id !== id));
+}
+
+function addTrackToPlaylist(playlistId, track) {
+    const playlists = getPlaylists();
+    const playlist = playlists.find(p => p.id === playlistId);
+    if (!playlist) return false;
+    if (!playlist.tracks.some(t => t.id === track.id)) {
+        playlist.tracks.push({ id: track.id, title: track.title, artist: track.artist, cover: track.cover, duration: track.duration, image: track.image || "" });
+        savePlaylists(playlists);
+        return true;
+    }
+    return false;
+}
+
+function removeTrackFromPlaylist(playlistId, trackId) {
+    const playlists = getPlaylists();
+    const playlist = playlists.find(p => p.id === playlistId);
+    if (!playlist) return;
+    playlist.tracks = playlist.tracks.filter(t => t.id !== trackId);
+    savePlaylists(playlists);
+}
+
+function isTrackInPlaylist(playlistId, trackId) {
+    const playlist = getPlaylists().find(p => p.id === playlistId);
+    return playlist ? playlist.tracks.some(t => t.id === trackId) : false;
 }
 
 // ===== HISTORICO =====
@@ -699,17 +753,25 @@ function renderStatus(message, type = "info") {
     queueList.innerHTML = `<p class="queue-empty">${escapeHtml(message)}</p>`;
 }
 
+function getTrackImage(track) {
+    if (track.image) return track.image;
+    if (track.id && !track.id.startsWith("local-")) return `https://img.youtube.com/vi/${track.id}/mqdefault.jpg`;
+    return "";
+}
+
 function cardCover(track) {
-    const image = track.image
-        ? `<img src="${escapeHtml(track.image)}" alt="" loading="lazy" onerror="this.remove()">`
+    const image = getTrackImage(track);
+    const imgTag = image
+        ? `<img src="${escapeHtml(image)}" alt="" loading="lazy" onerror="this.remove()">`
         : "";
-    return `<span class="cover ${escapeHtml(track.cover)}">${image}</span>`;
+    return `<span class="cover ${escapeHtml(track.cover)}">${imgTag}</span>`;
 }
 
 function setCoverImage(element, track) {
     element.className = `cover ${track && track.cover ? track.cover : "cover-one"}`;
-    element.innerHTML = track && track.image
-        ? `<img src="${escapeHtml(track.image)}" alt="" loading="lazy" onerror="this.remove()">`
+    const image = track ? getTrackImage(track) : "";
+    element.innerHTML = image
+        ? `<img src="${escapeHtml(image)}" alt="" loading="lazy" onerror="this.remove()">`
         : "";
 }
 
@@ -944,6 +1006,17 @@ async function loadView(query) {
         "Sua música. Seu mundo.",
         "Feito para você"
     );
+
+    if (searchCache.has(randomQuery)) {
+        const cached = searchCache.get(randomQuery);
+        displayList = [...cached];
+        nextPageToken = "";
+        renderCards(displayList);
+        renderQueue();
+        console.log(`[VIEW] ${displayList.length} músicas carregadas do cache`);
+        return;
+    }
+
     renderStatus("Carregando músicas...", "loading");
 
     try {
@@ -954,6 +1027,7 @@ async function loadView(query) {
         tracks = shuffleArray(tracks);
         displayList = tracks;
         nextPageToken = data.nextPageToken;
+        searchCache.set(randomQuery, [...tracks]);
         console.log(`[VIEW] displayList atualizado: ${displayList.length} músicas (embaralhadas)`);
 
         renderCards(displayList);
@@ -973,6 +1047,18 @@ async function loadRecommendations() {
         "Músicas que você pode curtir.",
         "Recomendado pra você"
     );
+
+    if (searchCache.has("recommend")) {
+        const cached = searchCache.get("recommend");
+        displayList = [...cached];
+        currentSearchToken = "recommend";
+        nextPageToken = "";
+        renderCards(displayList);
+        renderQueue();
+        console.log(`[RECOMMEND] ${displayList.length} músicas carregadas do cache`);
+        return;
+    }
+
     renderStatus("Carregando recomendações...", "loading");
 
     try {
@@ -985,6 +1071,7 @@ async function loadRecommendations() {
         }
         currentSearchToken = "recommend";
         nextPageToken = "";
+        searchCache.set("recommend", [...displayList]);
         console.log(`[RECOMMEND] displayList atualizado: ${displayList.length} músicas`);
 
         renderCards(displayList);
@@ -1161,7 +1248,9 @@ function handleQueueScroll() {
 
 if (contentArea) {
     contentArea.addEventListener("scroll", debounce(handleContentScroll, 200));
-    window.addEventListener("scroll", debounce(handleContentScroll, 200), { passive: true });
+    if (!isMobileLayout()) {
+        window.addEventListener("scroll", debounce(handleContentScroll, 200), { passive: true });
+    }
 }
 if (queueArea) {
     queueArea.addEventListener("scroll", debounce(handleQueueScroll, 200));
@@ -1181,6 +1270,10 @@ if (recommendBtn) {
 
 menuItems.forEach((item) => {
     item.addEventListener("click", () => {
+        madeForYou.classList.remove("biblioteca-view");
+        if (heroSection) heroSection.style.display = "";
+        const shelfHeading = document.querySelector(".section-heading");
+        if (shelfHeading) shelfHeading.style.display = "";
         menuItems.forEach((menuItem) => menuItem.classList.toggle("active", menuItem === item));
         if (item.dataset.view === "buscar") {
             searchInput.focus();
@@ -1198,22 +1291,13 @@ menuItems.forEach((item) => {
             return;
         }
         if (item.dataset.view === "playlist") {
-            performSearch("playlist electronic");
+            playlistModal.classList.add("open");
+            playlistNameInput.value = "";
+            playlistNameInput.focus();
             return;
         }
         if (item.dataset.view === "biblioteca") {
-            const favs = getFavorites();
-            if (!favs.length) {
-                setHeader("Sua<span>Biblioteca</span>", "Sua coleção", "Nenhuma música salva ainda.", "Sua biblioteca");
-                renderStatus("Nenhuma música salva ainda. Curta músicas pra preencher aqui.");
-                displayList = [];
-                renderPlayer();
-                return;
-            }
-            setHeader("Sua<span>Biblioteca</span>", "Sua coleção", "Músicas que você curtiu.", "Sua biblioteca");
-            displayList = favs;
-            renderCards(displayList);
-            renderQueue();
+            renderBiblioteca();
             return;
         }
         if (item.dataset.view === "favoritos") {
@@ -1410,18 +1494,18 @@ moreButtons.forEach((btn) => {
         if (!currentContextTrack) return;
 
         const rect = btn.getBoundingClientRect();
-        const menuWidth = 200;
-        const menuHeight = 140;
+        const menuWidth = Math.min(200, window.innerWidth - 20);
+        const menuHeight = 180;
 
         let top = rect.bottom + 8;
         let left = rect.left;
 
-        if (left + menuWidth > window.innerWidth) {
+        if (left + menuWidth > window.innerWidth - 10) {
             left = window.innerWidth - menuWidth - 10;
         }
         if (left < 10) left = 10;
 
-        if (top + menuHeight > window.innerHeight) {
+        if (top + menuHeight > window.innerHeight - 10) {
             top = rect.top - menuHeight - 8;
         }
         if (top < 10) top = 10;
@@ -1459,6 +1543,11 @@ contextMenu.addEventListener("click", (e) => {
     } else if (action === "favorite") {
         toggleFavorite(currentContextTrack);
         renderFavButtons(tracks[currentTrack]);
+    } else if (action === "add-to-playlist") {
+        e.stopPropagation();
+        showPlaylistSubmenu(currentContextTrack, e);
+        contextMenu.classList.remove("open");
+        return;
     } else if (action === "share") {
         const url = `https://www.youtube.com/watch?v=${currentContextTrack.id}`;
         navigator.clipboard.writeText(url).then(() => {
@@ -1468,6 +1557,245 @@ contextMenu.addEventListener("click", (e) => {
 
     contextMenu.classList.remove("open");
 });
+
+// ===== PLAYLIST UI =====
+const playlistModal = document.getElementById("playlistModal");
+const playlistNameInput = document.getElementById("playlistNameInput");
+const playlistCreateBtn = document.getElementById("playlistCreateBtn");
+const playlistModalClose = document.getElementById("playlistModalClose");
+const createPlaylistBtn = document.getElementById("createPlaylistBtn");
+const playlistSubmenu = document.getElementById("playlistSubmenu");
+const userPlaylistsList = document.getElementById("userPlaylistsList");
+
+function showPlaylistSubmenu(track, event) {
+    const playlists = getPlaylists();
+
+    if (playlists.length === 0) {
+        alert("Crie uma playlist primeiro!");
+        return;
+    }
+
+    playlistSubmenu.innerHTML = playlists.map(p => {
+        const alreadyAdded = isTrackInPlaylist(p.id, track.id);
+        return `<button class="playlist-submenu-item" data-playlist-id="${p.id}" ${alreadyAdded ? 'style="opacity:0.5"' : ''}>${escapeHtml(p.name)}${alreadyAdded ? ' (já adicionada)' : ''}</button>`;
+    }).join("");
+
+    const rect = event.target.getBoundingClientRect();
+    let top = rect.bottom + 8;
+    let left = rect.left;
+
+    if (left + 180 > window.innerWidth - 10) {
+        left = window.innerWidth - 190;
+    }
+    if (left < 10) left = 10;
+
+    if (top + (playlists.length * 40 + 12) > window.innerHeight - 10) {
+        top = rect.top - (playlists.length * 40 + 20);
+    }
+    if (top < 10) top = 10;
+
+    playlistSubmenu.style.top = top + "px";
+    playlistSubmenu.style.left = left + "px";
+    playlistSubmenu.classList.add("open");
+
+    playlistSubmenu.querySelectorAll(".playlist-submenu-item").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const playlistId = btn.dataset.playlistId;
+            const added = addTrackToPlaylist(playlistId, track);
+            if (added) {
+                const p = getPlaylists().find(p => p.id === playlistId);
+                showToast(`Adicionada a "${p ? p.name : "playlist"}"`);
+            } else {
+                showToast("Música já está nessa playlist");
+            }
+            playlistSubmenu.classList.remove("open");
+            renderUserPlaylists();
+        });
+    });
+}
+
+function showToast(message) {
+    const toast = document.createElement("div");
+    toast.textContent = message;
+    Object.assign(toast.style, {
+        position: "fixed", bottom: "24px", left: "50%", transform: "translateX(-50%)",
+        background: "var(--blue)", color: "#fff", padding: "12px 24px",
+        borderRadius: "8px", fontSize: ".85rem", fontWeight: "600",
+        zIndex: "9999", boxShadow: "0 4px 16px rgba(0,0,0,.4)"
+    });
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2200);
+}
+
+playlistCreateBtn.addEventListener("click", () => {
+    const name = playlistNameInput.value.trim();
+    if (!name) {
+        playlistNameInput.style.borderColor = "var(--red)";
+        setTimeout(() => { playlistNameInput.style.borderColor = ""; }, 1500);
+        return;
+    }
+    createPlaylist(name);
+    playlistModal.classList.remove("open");
+    renderUserPlaylists();
+    showToast(`Playlist "${name}" criada!`);
+});
+
+playlistNameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+        playlistCreateBtn.click();
+    }
+});
+
+playlistModalClose.addEventListener("click", () => {
+    playlistModal.classList.remove("open");
+});
+
+playlistModal.addEventListener("click", (e) => {
+    if (e.target === playlistModal) {
+        playlistModal.classList.remove("open");
+    }
+});
+
+createPlaylistBtn.addEventListener("click", () => {
+    playlistModal.classList.add("open");
+    playlistNameInput.value = "";
+    playlistNameInput.focus();
+});
+
+document.addEventListener("click", (e) => {
+    if (!playlistSubmenu.contains(e.target) && !e.target.closest('[data-action="add-to-playlist"]')) {
+        playlistSubmenu.classList.remove("open");
+    }
+});
+
+function renderUserPlaylists() {
+    if (!userPlaylistsList) return;
+    const playlists = getPlaylists();
+
+    if (playlists.length === 0) {
+        userPlaylistsList.innerHTML = '<p class="playlist-empty-msg">Nenhuma playlist ainda</p>';
+        return;
+    }
+
+    userPlaylistsList.innerHTML = playlists.map(p => `
+        <button class="user-playlist-item" data-playlist-id="${p.id}">
+            <svg viewBox="0 0 24 24"><path d="M4 6h12v2H4zm0 5h12v2H4zm0 5h8v2H4zm14-4 4 2.5-4 2.5z"/></svg>
+            <span>${escapeHtml(p.name)}</span>
+            <span class="playlist-delete" data-delete-id="${p.id}" title="Excluir playlist">&times;</span>
+        </button>
+    `).join("");
+
+    userPlaylistsList.querySelectorAll(".user-playlist-item").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            if (e.target.classList.contains("playlist-delete")) {
+                e.stopPropagation();
+                const id = e.target.dataset.deleteId;
+                const p = getPlaylists().find(p => p.id === id);
+                if (p && confirm(`Excluir playlist "${p.name}"?`)) {
+                    deletePlaylist(id);
+                    renderUserPlaylists();
+                    showToast("Playlist excluída");
+                }
+                return;
+            }
+            openUserPlaylist(btn.dataset.playlistId);
+        });
+    });
+}
+
+function openUserPlaylist(playlistId) {
+    const playlists = getPlaylists();
+    const playlist = playlists.find(p => p.id === playlistId);
+    if (!playlist) return;
+
+    if (playlist.tracks.length === 0) {
+        setHeader(escapeHtml(playlist.name), "Sua playlist", "Nenhuma música ainda.", playlist.name);
+        renderStatus("Adicione músicas pelo menu '...' nas músicas.");
+        displayList = [];
+        renderPlayer();
+        document.querySelectorAll(".menu-item").forEach(m => m.classList.remove("active"));
+        return;
+    }
+
+    setHeader(escapeHtml(playlist.name), "Sua playlist", playlist.tracks.length + " música(s)", playlist.name);
+    displayList = [...playlist.tracks];
+    renderCards(displayList);
+    renderQueue();
+    document.querySelectorAll(".menu-item").forEach(m => m.classList.remove("active"));
+}
+
+renderUserPlaylists();
+
+// ===== BIBLIOTECA =====
+function renderBiblioteca() {
+    madeForYou.classList.add("biblioteca-view");
+    if (heroSection) heroSection.style.display = "none";
+    const shelfHeading = document.querySelector(".section-heading");
+    if (shelfHeading) shelfHeading.style.display = "none";
+    setHeader("Sua<span>Biblioteca</span>", "Sua coleção", "Músicas e playlists.", "Sua biblioteca");
+
+    const favs = getFavorites();
+    const playlists = getPlaylists();
+
+    madeForYou.innerHTML = `
+        <button class="biblioteca-list-item" data-bib-action="favoritos">
+            <span class="biblioteca-item-icon fav-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 21s-8-4.7-8-11a4.8 4.8 0 0 1 8-3.6A4.8 4.8 0 0 1 20 10c0 6.3-8 11-8 11z"/></svg>
+            </span>
+            <span class="biblioteca-item-info">
+                <strong>Músicas Curtidas</strong>
+                <small>${favs.length} música${favs.length !== 1 ? 's' : ''}</small>
+            </span>
+            <svg class="biblioteca-item-arrow" viewBox="0 0 24 24" width="18" height="18"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+        ${playlists.map(p => `
+            <button class="biblioteca-list-item" data-bib-action="playlist" data-playlist-id="${p.id}">
+                <span class="biblioteca-item-icon playlist-icon">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h12v2H4zm0 5h12v2H4zm0 5h8v2H4zm14-4 4 2.5-4 2.5z"/></svg>
+                </span>
+                <span class="biblioteca-item-info">
+                    <strong>${escapeHtml(p.name)}</strong>
+                    <small>${p.tracks.length} música${p.tracks.length !== 1 ? 's' : ''}</small>
+                </span>
+                <svg class="biblioteca-item-arrow" viewBox="0 0 24 24" width="18" height="18"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+        `).join('')}
+    `;
+
+    madeForYou.querySelector('[data-bib-action="favoritos"]')?.addEventListener('click', () => {
+        madeForYou.classList.remove("biblioteca-view");
+        if (heroSection) heroSection.style.display = "";
+        const shelfHeading = document.querySelector(".section-heading");
+        if (shelfHeading) shelfHeading.style.display = "";
+        if (!favs.length) {
+            setHeader("Músicas<span>Curtidas</span>", "Salvas por você", "Nenhuma música ainda.", "Músicas curtidas");
+            renderStatus("Nenhuma música salva ainda. Curta músicas pra preencher aqui.");
+            displayList = [];
+            renderPlayer();
+            renderQueue();
+            return;
+        }
+        setHeader("Músicas<span>Curtidas</span>", "Salvas por você", `${favs.length} música(s)`, "Músicas curtidas");
+        displayList = [...favs];
+        renderCards(displayList);
+        renderQueue();
+    });
+
+    madeForYou.querySelectorAll('[data-bib-action="playlist"]').forEach(card => {
+        card.addEventListener('click', () => {
+            madeForYou.classList.remove("biblioteca-view");
+            if (heroSection) heroSection.style.display = "";
+            const shelfHeading = document.querySelector(".section-heading");
+            if (shelfHeading) shelfHeading.style.display = "";
+            openUserPlaylist(card.dataset.playlistId);
+        });
+    });
+
+    displayList = [];
+    renderPlayer();
+    renderQueue();
+}
 
 // ===== AUTENTICACAO (Backend API) =====
 const SESSION_KEY = "camadaplay:session_v1";
@@ -1556,6 +1884,7 @@ const userIndicatorAvatar = document.getElementById("userIndicatorAvatar");
 const userIndicatorName = document.getElementById("userIndicatorName");
 let currentUser = getSession();
 migrateStorageToCurrentProfile();
+renderUserPlaylists();
 sendVisitHeartbeat();
 setInterval(sendVisitHeartbeat, 30000);
 
@@ -1666,6 +1995,7 @@ loginForm.addEventListener("submit", async (e) => {
         updateProfileUI();
         showScreen(profileScreen);
         resetPlayer();
+        renderUserPlaylists();
     } catch (err) {
         loginError.textContent = err.message;
     }
@@ -1699,6 +2029,7 @@ registerForm.addEventListener("submit", async (e) => {
         updateProfileUI();
         showScreen(profileScreen);
         resetPlayer();
+        renderUserPlaylists();
     } catch (err) {
         registerError.textContent = err.message;
     }
@@ -1720,6 +2051,7 @@ logoutBtn.addEventListener("click", () => {
     renderPlayer();
     renderCards([]);
     renderQueue();
+    renderUserPlaylists();
     loadView(getRandomQuery());
 });
 
@@ -1751,23 +2083,103 @@ function resetPlayer() {
 
 updateProfileUI();
 
-// ===== BOTAO DOWNLOAD APP =====
+// ===== BOTAO DOWNLOAD APP (PWA) =====
 const downloadBtn = document.getElementById("downloadApp");
-const APK_URL = "https://github.com/rafaelsousa2254/Camada-Music/releases/download/v1.0.0/CamadaPlay.apk";
 
 function isMobileDevice() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
-function setupDownloadButton() {
-    if (!downloadBtn) return;
-    
-    if (isMobileDevice()) {
-        downloadBtn.href = APK_URL;
-        downloadBtn.style.display = "flex";
+function isStandalone() {
+    return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+
+window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    window.__pwaInstallPrompt = e;
+});
+
+async function installPWA() {
+    if (window.__pwaInstallPrompt) {
+        window.__pwaInstallPrompt.prompt();
+        const { outcome } = await window.__pwaInstallPrompt.userChoice;
+        console.log("[PWA] Instalação:", outcome);
+        window.__pwaInstallPrompt = null;
     } else {
-        downloadBtn.style.display = "none";
+        alert("Para instalar, use o menu do navegador e selecione 'Adicionar à tela inicial'.");
     }
 }
 
+function setupDownloadButton() {
+    if (!downloadBtn) return;
+
+    if (isStandalone() || !isMobileDevice()) {
+        downloadBtn.classList.remove("mobile-visible");
+        return;
+    }
+
+    downloadBtn.removeAttribute("href");
+    downloadBtn.removeAttribute("target");
+    downloadBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        installPWA();
+    });
+    downloadBtn.classList.add("mobile-visible");
+}
+
 setupDownloadButton();
+
+// ===== SERVICE WORKER REGISTRATION =====
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/service-worker.js").catch(() => {});
+}
+
+// ===== MODAL TV APP =====
+const tvDownloadBtn = document.getElementById("tvDownloadBtn");
+const tvModal = document.getElementById("tvModal");
+const tvModalClose = document.getElementById("tvModalClose");
+const tvDownloadLink = document.getElementById("tvDownloadLink");
+const tvQrCode = document.getElementById("tvQrCode");
+
+const TV_APK_URL = window.location.origin + "/camadaplay-tv.apk";
+
+function isTVDevice() {
+    const ua = navigator.userAgent || "";
+    return /SmartTV|webOS|Tizen|Roku|FireTV|Android TV|HbbTV|NetCast|VIERA|BRAVIA|PlayStation|Xbox/i.test(ua);
+}
+
+function setupTvButton() {
+    if (!tvDownloadBtn) return;
+
+    if (isTVDevice()) {
+        tvDownloadBtn.classList.add("tv-visible");
+    } else {
+        tvDownloadBtn.classList.remove("tv-visible");
+    }
+}
+
+function generateTvQrCode() {
+    if (!tvQrCode) return;
+    const encodedUrl = encodeURIComponent(TV_APK_URL);
+    tvQrCode.src = `https://chart.googleapis.com/chart?cht=qr&chs=256x256&chl=${encodedUrl}&choe=UTF-8`;
+}
+
+if (tvDownloadBtn && tvModal) {
+    tvDownloadBtn.addEventListener("click", () => {
+        tvDownloadLink.href = TV_APK_URL;
+        generateTvQrCode();
+        tvModal.classList.add("open");
+    });
+
+    tvModalClose.addEventListener("click", () => {
+        tvModal.classList.remove("open");
+    });
+
+    tvModal.addEventListener("click", (e) => {
+        if (e.target === tvModal) {
+            tvModal.classList.remove("open");
+        }
+    });
+}
+
+setupTvButton();
