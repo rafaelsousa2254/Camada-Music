@@ -970,19 +970,23 @@ function loadTrack(index, shouldPlay) {
 
     if (isMobileLayout()) {
         const streamUrl = `/api/stream/${track.id}`;
-        mobileAudio.src = streamUrl;
-        mobileAudio.load();
         embedHeroVideo(track.id, 0);
         if (shouldPlay) {
-            mobileAudio.play().then(() => {
-                playing = true;
-                setPlayState(true);
-            }).catch(err => {
-                console.error("[PLAY] Erro mobile audio:", err);
-                playing = false;
-                setPlayState(false);
-            });
+            const onCanPlay = () => {
+                mobileAudio.removeEventListener("canplay", onCanPlay);
+                mobileAudio.play().then(() => {
+                    playing = true;
+                    setPlayState(true);
+                }).catch(err => {
+                    console.error("[PLAY] Erro mobile audio:", err);
+                    playing = false;
+                    setPlayState(false);
+                });
+            };
+            mobileAudio.addEventListener("canplay", onCanPlay);
         }
+        mobileAudio.src = streamUrl;
+        mobileAudio.load();
         return;
     }
 
