@@ -972,6 +972,7 @@ function loadTrack(index, shouldPlay) {
         const streamUrl = `/api/stream/${track.id}`;
         mobileAudio.src = streamUrl;
         mobileAudio.load();
+        embedHeroVideo(track.id, 0);
         if (shouldPlay) {
             mobileAudio.play().then(() => {
                 playing = true;
