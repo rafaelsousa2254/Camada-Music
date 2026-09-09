@@ -879,10 +879,8 @@ function renderPlayer() {
     playerArtist.textContent = track.artist;
     sideTitle.textContent = track.title;
     sideArtist.textContent = track.artist;
-    if (!playing) {
-        sideDurationTime.textContent = formatTime(currentDuration || track.durationSeconds);
-        mobileDurationTime.textContent = formatTime(currentDuration || track.durationSeconds);
-    }
+    sideDurationTime.textContent = formatTime(currentDuration || track.durationSeconds);
+    mobileDurationTime.textContent = formatTime(currentDuration || track.durationSeconds);
     setCoverImage(playerCover, track);
     setCoverImage(sideCover, track);
     heroCover.innerHTML = track.image ? `<img src="${escapeHtml(track.image)}" alt="">` : '';
@@ -950,10 +948,10 @@ function loadTrack(index, shouldPlay) {
 
     playing = false;
     setPlayState(false);
-    if (!isMobileLayout()) {
-        sideProgressControl.value = 0;
-        sideCurrentTime.textContent = "0:00";
-    }
+    sideProgressControl.value = 0;
+    sideCurrentTime.textContent = "0:00";
+    mobileProgressControl.value = 0;
+    mobileCurrentTime.textContent = "0:00";
     currentDuration = 0;
     renderPlayer();
 
@@ -972,57 +970,18 @@ function loadTrack(index, shouldPlay) {
 
     if (isMobileLayout()) {
         const streamUrl = `/api/stream/${track.id}`;
-        embedHeroVideo(track.id, 0);
-        if (shouldPlay) {
-            let settled = false;
-            const cleanup = () => {
-                mobileAudio.removeEventListener("canplay", onCanPlay);
-                mobileAudio.removeEventListener("error", onError);
-                clearTimeout(timeoutId);
-            };
-            const onCanPlay = () => {
-                if (settled) return;
-                settled = true;
-                cleanup();
-                mobileAudio.play().then(() => {
-                    playing = true;
-                    setPlayState(true);
-                }).catch(err => {
-                    console.error("[PLAY] Erro mobile audio:", err);
-                    fallbackToYT();
-                });
-            };
-            const onError = () => {
-                if (settled) return;
-                settled = true;
-                cleanup();
-                console.warn("[PLAY] Audio stream falhou, fallback YouTube");
-                fallbackToYT();
-            };
-            const fallbackToYT = () => {
-                if (!ytReady || !ytPlayer) return;
-                try {
-                    ytPlayer.loadVideoById(track.id);
-                    applyProfileVolume();
-                    if (ytPlayer.unMute) ytPlayer.unMute();
-                    ytPlayer.playVideo();
-                    playing = true;
-                    setPlayState(true);
-                } catch (_) {}
-            };
-            const timeoutId = setTimeout(() => {
-                if (settled) return;
-                settled = true;
-                cleanup();
-                if (!mobileAudio.paused && mobileAudio.currentTime > 0) return;
-                console.warn("[PLAY] Audio stream timeout, fallback YouTube");
-                fallbackToYT();
-            }, 10000);
-            mobileAudio.addEventListener("canplay", onCanPlay);
-            mobileAudio.addEventListener("error", onError);
-        }
         mobileAudio.src = streamUrl;
         mobileAudio.load();
+        if (shouldPlay) {
+            mobileAudio.play().then(() => {
+                playing = true;
+                setPlayState(true);
+            }).catch(err => {
+                console.error("[PLAY] Erro mobile audio:", err);
+                playing = false;
+                setPlayState(false);
+            });
+        }
         return;
     }
 
@@ -1494,7 +1453,6 @@ searchInput.addEventListener("input", () => {
 
 // ===== PROGRESSO =====
 setInterval(() => {
-    if (isMobileLayout()) return;
     if (ytReady && ytPlayer && playing) {
         const current = ytPlayer.getCurrentTime() || 0;
         const duration = ytPlayer.getDuration() || 0;
