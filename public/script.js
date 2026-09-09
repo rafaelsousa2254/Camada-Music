@@ -972,18 +972,52 @@ function loadTrack(index, shouldPlay) {
         const streamUrl = `/api/stream/${track.id}`;
         embedHeroVideo(track.id, 0);
         if (shouldPlay) {
-            const onCanPlay = () => {
+            let settled = false;
+            const cleanup = () => {
                 mobileAudio.removeEventListener("canplay", onCanPlay);
+                mobileAudio.removeEventListener("error", onError);
+                clearTimeout(timeoutId);
+            };
+            const onCanPlay = () => {
+                if (settled) return;
+                settled = true;
+                cleanup();
                 mobileAudio.play().then(() => {
                     playing = true;
                     setPlayState(true);
                 }).catch(err => {
                     console.error("[PLAY] Erro mobile audio:", err);
-                    playing = false;
-                    setPlayState(false);
+                    fallbackToYT();
                 });
             };
+            const onError = () => {
+                if (settled) return;
+                settled = true;
+                cleanup();
+                console.warn("[PLAY] Audio stream falhou, fallback YouTube");
+                fallbackToYT();
+            };
+            const fallbackToYT = () => {
+                if (!ytReady || !ytPlayer) return;
+                try {
+                    ytPlayer.loadVideoById(track.id);
+                    applyProfileVolume();
+                    if (ytPlayer.unMute) ytPlayer.unMute();
+                    ytPlayer.playVideo();
+                    playing = true;
+                    setPlayState(true);
+                } catch (_) {}
+            };
+            const timeoutId = setTimeout(() => {
+                if (settled) return;
+                settled = true;
+                cleanup();
+                if (!mobileAudio.paused && mobileAudio.currentTime > 0) return;
+                console.warn("[PLAY] Audio stream timeout, fallback YouTube");
+                fallbackToYT();
+            }, 10000);
             mobileAudio.addEventListener("canplay", onCanPlay);
+            mobileAudio.addEventListener("error", onError);
         }
         mobileAudio.src = streamUrl;
         mobileAudio.load();
