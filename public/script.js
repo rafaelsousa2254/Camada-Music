@@ -852,6 +852,13 @@ function setPlayState(isPlaying) {
     }
 }
 
+function updatePlayButtons(isPlaying) {
+    [playPause, sidePlayPause].forEach((button) => {
+        button.classList.toggle("is-playing", isPlaying);
+        button.setAttribute("aria-label", isPlaying ? "Pausar" : "Tocar");
+    });
+}
+
 function renderPlayer() {
     const track = tracks[currentTrack];
     if (!track) {
@@ -910,6 +917,7 @@ function updateMediaSession(track) {
     });
     navigator.mediaSession.setActionHandler("previoustrack", () => loadTrack(currentTrack - 1, true));
     navigator.mediaSession.setActionHandler("nexttrack", () => playNextTrack());
+    navigator.mediaSession.playbackState = "playing";
 }
 
 // ===== MOBILE AUDIO EVENTS =====
@@ -1063,8 +1071,8 @@ function togglePlay() {
             setPlayState(true);
         } else {
             mobileAudio.pause();
-            playing = false;
-            setPlayState(false);
+    playing = false;
+    updatePlayButtons(false);
         }
         return;
     }
