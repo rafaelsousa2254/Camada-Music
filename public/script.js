@@ -950,10 +950,10 @@ function loadTrack(index, shouldPlay) {
 
     playing = false;
     setPlayState(false);
-    sideProgressControl.value = 0;
-    sideCurrentTime.textContent = "0:00";
-    mobileProgressControl.value = 0;
-    mobileCurrentTime.textContent = "0:00";
+    if (!isMobileLayout()) {
+        sideProgressControl.value = 0;
+        sideCurrentTime.textContent = "0:00";
+    }
     currentDuration = 0;
     renderPlayer();
 
