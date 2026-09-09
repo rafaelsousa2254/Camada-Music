@@ -4,6 +4,8 @@ const cors = require('cors');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const { execFile, spawn } = require('child_process');
+const https = require('https');
+const http = require('http');
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
@@ -468,6 +470,32 @@ app.put('/api/playlists/:username/:playlistId', (req, res) => {
 // ===== AUDIO STREAM (mobile background playback) =====
 const audioStreamCache = new Map();
 
+function proxyAudio(audioUrl, req, res) {
+    const client = audioUrl.startsWith('https') ? https : http;
+    const range = req.headers.range;
+    const opts = { headers: {} };
+    if (range) opts.headers.Range = range;
+
+    client.get(audioUrl, opts, (upstream) => {
+        if (upstream.statusCode === 302 || upstream.statusCode === 301) {
+            proxyAudio(upstream.headers.location, req, res);
+            return;
+        }
+        const headers = {
+            'Content-Type': upstream.headers['content-type'] || 'audio/mpeg',
+            'Accept-Ranges': 'bytes',
+            'Access-Control-Allow-Origin': '*',
+        };
+        if (upstream.headers['content-length']) headers['Content-Length'] = upstream.headers['content-length'];
+        if (upstream.headers['content-range']) headers['Content-Range'] = upstream.headers['content-range'];
+        res.writeHead(upstream.statusCode, headers);
+        upstream.pipe(res);
+    }).on('error', (err) => {
+        console.error('[STREAM] Erro proxy:', err.message);
+        if (!res.headersSent) res.status(502).json({ error: 'Erro ao buscar áudio.' });
+    });
+}
+
 app.get('/api/stream/:videoId', (req, res) => {
     const { videoId } = req.params;
     if (!videoId || !/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
@@ -475,8 +503,8 @@ app.get('/api/stream/:videoId', (req, res) => {
     }
 
     const cached = audioStreamCache.get(videoId);
-    if (cached && Date.now() - cached.ts < 30 * 60 * 1000) {
-        return res.redirect(cached.url);
+    if (cached && Date.now() - cached.ts < 60 * 60 * 1000) {
+        return proxyAudio(cached.url, req, res);
     }
 
     console.log(`[STREAM] Buscando áudio: ${videoId}`);
@@ -499,7 +527,7 @@ app.get('/api/stream/:videoId', (req, res) => {
         }
 
         console.log(`[STREAM] OK: ${videoId}`);
-        res.redirect(url);
+        proxyAudio(url, req, res);
     });
 });
 
