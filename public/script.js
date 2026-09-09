@@ -90,6 +90,8 @@ let activeQuery = "";
 let ytPlayer = null;
 let ytReady = false;
 let playerState = -1;
+const mobileAudio = document.getElementById("mobileAudio");
+let mobileAudioReady = false;
 let currentDuration = 0;
 let nextPageToken = "";
 let isLoadingMore = false;
@@ -136,6 +138,9 @@ function setPlayerVolume(volume) {
     const nextVolume = Math.max(0, Math.min(100, Number(volume) || 0));
     volumeControl.value = nextVolume;
     if (mobileVolumeControl) mobileVolumeControl.value = nextVolume;
+    if (isMobileLayout() && mobileAudio) {
+        mobileAudio.volume = nextVolume / 100;
+    }
     if (ytReady && ytPlayer) {
         if (nextVolume > 0 && ytPlayer.unMute) ytPlayer.unMute();
         ytPlayer.setVolume(nextVolume);
@@ -893,10 +898,37 @@ function updateMediaSession(track) {
         album: "CamadaPlay",
         artwork
     });
-    navigator.mediaSession.setActionHandler("play", () => { if (ytPlayer && ytReady) { ytPlayer.playVideo(); playing = true; setPlayState(true); }});
-    navigator.mediaSession.setActionHandler("pause", () => { if (ytPlayer && ytReady) { ytPlayer.pauseVideo(); playing = false; setPlayState(false); }});
+    navigator.mediaSession.setActionHandler("play", () => {
+        if (isMobileLayout()) { mobileAudio.play(); playing = true; setPlayState(true); }
+        else if (ytPlayer && ytReady) { ytPlayer.playVideo(); playing = true; setPlayState(true); }
+    });
+    navigator.mediaSession.setActionHandler("pause", () => {
+        if (isMobileLayout()) { mobileAudio.pause(); playing = false; setPlayState(false); }
+        else if (ytPlayer && ytReady) { ytPlayer.pauseVideo(); playing = false; setPlayState(false); }
+    });
     navigator.mediaSession.setActionHandler("previoustrack", () => loadTrack(currentTrack - 1, true));
     navigator.mediaSession.setActionHandler("nexttrack", () => playNextTrack());
+}
+
+// ===== MOBILE AUDIO EVENTS =====
+if (mobileAudio) {
+    mobileAudio.addEventListener("ended", () => {
+        playing = false;
+        playNextTrack();
+    });
+    mobileAudio.addEventListener("timeupdate", () => {
+        if (!isMobileLayout()) return;
+        const cur = mobileAudio.currentTime || 0;
+        const dur = mobileAudio.duration || 0;
+        mobileCurrentTime.textContent = formatTime(cur);
+        if (dur > 0) {
+            mobileDurationTime.textContent = formatTime(dur);
+            mobileProgressControl.value = (cur / dur) * 100;
+        }
+        if ("mediaSession" in navigator && dur > 0) {
+            navigator.mediaSession.setPositionState({ duration: dur, playbackRate: 1, position: cur });
+        }
+    });
 }
 
 // ===== REPRODUÇÃO =====
@@ -935,6 +967,23 @@ function loadTrack(index, shouldPlay) {
         }
     }
 
+    if (isMobileLayout()) {
+        const streamUrl = `/api/stream/${track.id}`;
+        mobileAudio.src = streamUrl;
+        mobileAudio.load();
+        if (shouldPlay) {
+            mobileAudio.play().then(() => {
+                playing = true;
+                setPlayState(true);
+            }).catch(err => {
+                console.error("[PLAY] Erro mobile audio:", err);
+                playing = false;
+                setPlayState(false);
+            });
+        }
+        return;
+    }
+
     if (!ytReady || !ytPlayer) {
         console.warn("[PLAY] YouTube player ainda não está pronto, adicionando a fila");
         pendingPlayIndex = index;
@@ -967,12 +1016,25 @@ function playFromDisplay(index) {
 }
 
 function togglePlay() {
-    if (!ytReady || !ytPlayer) return;
-
     if (!tracks[currentTrack]) {
         if (displayList.length) playFromDisplay(0);
         return;
     }
+
+    if (isMobileLayout()) {
+        if (mobileAudio.paused) {
+            mobileAudio.play();
+            playing = true;
+            setPlayState(true);
+        } else {
+            mobileAudio.pause();
+            playing = false;
+            setPlayState(false);
+        }
+        return;
+    }
+
+    if (!ytReady || !ytPlayer) return;
 
     const state = ytPlayer.getPlayerState();
     if (state === YT.PlayerState.PLAYING) {
@@ -1275,16 +1337,20 @@ if (queueArea) {
 
 // ===== MANTER MUSICA EM SEGUNDO PLANO =====
 document.addEventListener("visibilitychange", () => {
-    if (!ytReady || !ytPlayer || !playing) return;
-    if (!document.hidden) {
-        setTimeout(() => {
-            try {
-                const state = ytPlayer.getPlayerState && ytPlayer.getPlayerState();
-                if (state !== YT.PlayerState.PLAYING) {
-                    ytPlayer.playVideo();
-                }
-            } catch (_) {}
-        }, 600);
+    if (document.hidden) return;
+    if (isMobileLayout()) {
+        if (mobileAudio && playing && mobileAudio.paused) {
+            setTimeout(() => { mobileAudio.play().catch(() => {}); }, 400);
+        }
+    } else {
+        if (ytReady && ytPlayer && playing) {
+            setTimeout(() => {
+                try {
+                    const state = ytPlayer.getPlayerState && ytPlayer.getPlayerState();
+                    if (state !== YT.PlayerState.PLAYING) ytPlayer.playVideo();
+                } catch (_) {}
+            }, 600);
+        }
     }
 });
 
@@ -1397,7 +1463,14 @@ setInterval(() => {
 }, 500);
 
 function seekFromProgress(control) {
-    if (ytReady && ytPlayer && currentDuration > 0) {
+    if (isMobileLayout() && mobileAudio && mobileAudio.duration > 0) {
+        const seekTo = (Number(control.value) / 100) * mobileAudio.duration;
+        mobileAudio.currentTime = seekTo;
+        sideProgressControl.value = control.value;
+        mobileProgressControl.value = control.value;
+        sideCurrentTime.textContent = formatTime(seekTo);
+        mobileCurrentTime.textContent = formatTime(seekTo);
+    } else if (ytReady && ytPlayer && currentDuration > 0) {
         const seekTo = (Number(control.value) / 100) * currentDuration;
         ytPlayer.seekTo(seekTo, true);
         sendHeroVideoCommand('seekTo', [seekTo, true]);

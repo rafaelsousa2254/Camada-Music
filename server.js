@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
-const { execFile } = require('child_process');
+const { execFile, spawn } = require('child_process');
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
@@ -463,6 +463,44 @@ app.put('/api/playlists/:username/:playlistId', (req, res) => {
 
     savePlaylists(allPlaylists);
     res.json({ playlist });
+});
+
+// ===== AUDIO STREAM (mobile background playback) =====
+const audioStreamCache = new Map();
+
+app.get('/api/stream/:videoId', (req, res) => {
+    const { videoId } = req.params;
+    if (!videoId || !/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+        return res.status(400).json({ error: 'ID inválido.' });
+    }
+
+    const cached = audioStreamCache.get(videoId);
+    if (cached && Date.now() - cached.ts < 30 * 60 * 1000) {
+        return res.redirect(cached.url);
+    }
+
+    console.log(`[STREAM] Buscando áudio: ${videoId}`);
+    execFile(YTDLP_PATH, [
+        '-f', 'bestaudio[ext=m4a]/bestaudio',
+        '--no-download',
+        '-g',
+        videoId
+    ], { timeout: 15000 }, (err, stdout) => {
+        if (err || !stdout.trim()) {
+            console.error('[STREAM] Erro:', err?.message || 'URL vazia');
+            return res.status(404).json({ error: 'Áudio não encontrado.' });
+        }
+        const url = stdout.trim().split('\n')[0];
+        audioStreamCache.set(videoId, { url, ts: Date.now() });
+
+        if (audioStreamCache.size > 500) {
+            const oldest = audioStreamCache.keys().next().value;
+            audioStreamCache.delete(oldest);
+        }
+
+        console.log(`[STREAM] OK: ${videoId}`);
+        res.redirect(url);
+    });
 });
 
 // ===== SEARCH =====
