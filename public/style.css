@@ -1983,6 +1983,8 @@ svg {
 
     .now-playing {
         max-width: none;
+        min-width: 0;
+        overflow: hidden;
     }
 
     .now-playing strong,
@@ -1997,6 +1999,11 @@ svg {
     .now-playing .cover {
         width: 48px;
         height: 48px;
+    }
+
+    .now-playing .favorite-btn,
+    .now-playing .more-button {
+        flex-shrink: 0;
     }
 
     .bottom-controls {
