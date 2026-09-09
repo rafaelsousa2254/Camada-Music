@@ -2015,6 +2015,7 @@ svg {
         justify-content: center;
         gap: 10px;
         padding-top: 6px;
+        padding-left: 16px;
     }
 
     .bottom-controls .icon-button.ghost {
