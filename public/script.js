@@ -956,13 +956,11 @@ function loadTrack(index, shouldPlay) {
     console.log(`[PLAY] Carregando faixa ${currentTrack}: ${track.title} (ID: ${track.id})`);
 
     playing = false;
-    updatePlayButtons(false);
-    if (isMobileLayout()) {
-        mobileAudio.currentTime = 0;
-    } else {
-        sideProgressControl.value = 0;
-        sideCurrentTime.textContent = "0:00";
-    }
+    setPlayState(false);
+    sideProgressControl.value = 0;
+    sideCurrentTime.textContent = "0:00";
+    mobileProgressControl.value = 0;
+    mobileCurrentTime.textContent = "0:00";
     currentDuration = 0;
     renderPlayer();
 
