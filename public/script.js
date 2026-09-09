@@ -1248,10 +1248,8 @@ function handleQueueScroll() {
 
 if (contentArea) {
     contentArea.addEventListener("scroll", debounce(handleContentScroll, 200));
-    if (!isMobileLayout()) {
-        window.addEventListener("scroll", debounce(handleContentScroll, 200), { passive: true });
-    }
 }
+window.addEventListener("scroll", debounce(handleContentScroll, 200), { passive: true });
 if (queueArea) {
     queueArea.addEventListener("scroll", debounce(handleQueueScroll, 200));
 }
