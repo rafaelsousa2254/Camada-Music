@@ -2060,7 +2060,10 @@ svg {
 
     .mobile-volume {
         display: flex;
-        position: relative;
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 8px);
+        transform: translateX(-50%);
         color: var(--soft);
     }
 

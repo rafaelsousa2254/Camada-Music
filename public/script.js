@@ -1491,6 +1491,11 @@ moreButtons.forEach((btn) => {
         currentContextTrack = tracks[currentTrack];
         if (!currentContextTrack) return;
 
+        if (contextMenu.classList.contains("open")) {
+            contextMenu.classList.remove("open");
+            return;
+        }
+
         const rect = btn.getBoundingClientRect();
         const menuWidth = Math.min(200, window.innerWidth - 20);
         const menuHeight = 180;
