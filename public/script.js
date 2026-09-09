@@ -1494,6 +1494,7 @@ searchInput.addEventListener("input", () => {
 
 // ===== PROGRESSO =====
 setInterval(() => {
+    if (isMobileLayout()) return;
     if (ytReady && ytPlayer && playing) {
         const current = ytPlayer.getCurrentTime() || 0;
         const duration = ytPlayer.getDuration() || 0;
