@@ -86,6 +86,7 @@ let tracks = [];
 let currentTrack = 0;
 let playing = false;
 let repeat = false;
+let isViewingStaticList = false;
 let activeQuery = "";
 let ytPlayer = null;
 let ytReady = false;
@@ -1076,6 +1077,7 @@ async function playNextTrack() {
 
 // ===== CARREGAR DADOS =====
 async function loadView(query) {
+    isViewingStaticList = false;
     const randomQuery = getRandomQuery();
     console.log(`[VIEW] loadView chamado - query original: "${query}", random: "${randomQuery}"`);
     activeQuery = query;
@@ -1121,6 +1123,7 @@ async function loadView(query) {
 }
 
 async function loadRecommendations() {
+    isViewingStaticList = false;
     console.log(`[RECOMMEND] Carregando recomendações`);
     setHeader(
         "Recomendado<span>Pra Você</span>",
@@ -1311,7 +1314,7 @@ const contentArea = document.querySelector(".content");
 const queueArea = document.querySelector(".queue-list");
 
 function handleContentScroll() {
-    if (!contentArea || isLoadingMore) return;
+    if (!contentArea || isLoadingMore || isViewingStaticList) return;
     const scrollingElement = isMobileLayout() ? document.documentElement : contentArea;
     const { scrollTop, scrollHeight, clientHeight } = scrollingElement;
     if (scrollHeight - scrollTop - clientHeight < 200) {
@@ -1368,6 +1371,7 @@ if (recommendBtn) {
 
 menuItems.forEach((item) => {
     item.addEventListener("click", () => {
+        isViewingStaticList = false;
         madeForYou.classList.remove("biblioteca-view");
         if (heroSection) heroSection.style.display = "";
         const shelfHeading = document.querySelector(".section-heading");
@@ -1404,11 +1408,13 @@ menuItems.forEach((item) => {
                 setHeader("Músicas<span>Curtidas</span>", "Salvas por você", "Nenhuma música curtida ainda.", "Músicas curtidas");
                 renderStatus("Nenhuma música curtida ainda.");
                 displayList = [];
+                isViewingStaticList = true;
                 renderPlayer();
                 return;
             }
             setHeader("Músicas<span>Curtidas</span>", "Salvas por você", "As músicas marcadas com coração ficam aqui.", "Músicas curtidas");
             displayList = favs;
+            isViewingStaticList = true;
             renderCards(displayList);
             renderQueue();
             return;
@@ -1823,6 +1829,7 @@ function openUserPlaylist(playlistId) {
         setHeader(escapeHtml(playlist.name), "Sua playlist", "Nenhuma música ainda.", playlist.name);
         renderStatus("Adicione músicas pelo menu '...' nas músicas.");
         displayList = [];
+        isViewingStaticList = true;
         renderPlayer();
         document.querySelectorAll(".menu-item").forEach(m => m.classList.remove("active"));
         return;
@@ -1830,6 +1837,7 @@ function openUserPlaylist(playlistId) {
 
     setHeader(escapeHtml(playlist.name), "Sua playlist", playlist.tracks.length + " música(s)", playlist.name);
     displayList = [...playlist.tracks];
+    isViewingStaticList = true;
     renderCards(displayList);
     renderQueue();
     document.querySelectorAll(".menu-item").forEach(m => m.classList.remove("active"));
@@ -1882,12 +1890,14 @@ function renderBiblioteca() {
             setHeader("Músicas<span>Curtidas</span>", "Salvas por você", "Nenhuma música ainda.", "Músicas curtidas");
             renderStatus("Nenhuma música salva ainda. Curta músicas pra preencher aqui.");
             displayList = [];
+            isViewingStaticList = true;
             renderPlayer();
             renderQueue();
             return;
         }
         setHeader("Músicas<span>Curtidas</span>", "Salvas por você", `${favs.length} música(s)`, "Músicas curtidas");
         displayList = [...favs];
+        isViewingStaticList = true;
         renderCards(displayList);
         renderQueue();
     });
