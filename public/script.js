@@ -1274,39 +1274,17 @@ if (queueArea) {
 }
 
 // ===== MANTER MUSICA EM SEGUNDO PLANO =====
-let wasPlayingBeforeHidden = false;
-let bgKeepAliveInterval = null;
-
 document.addEventListener("visibilitychange", () => {
-    if (!ytReady || !ytPlayer) return;
-
-    if (document.hidden) {
-        wasPlayingBeforeHidden = playing;
-        if (playing) {
-            bgKeepAliveInterval = setInterval(() => {
-                try {
-                    const state = ytPlayer.getPlayerState && ytPlayer.getPlayerState();
-                    if (state === YT.PlayerState.PAUSED || state === YT.PlayerState.ENDED) {
-                        ytPlayer.playVideo();
-                    }
-                } catch (_) {}
-            }, 3000);
-        }
-    } else {
-        clearInterval(bgKeepAliveInterval);
-        bgKeepAliveInterval = null;
-        if (wasPlayingBeforeHidden) {
-            setTimeout(() => {
-                try {
-                    const state = ytPlayer.getPlayerState && ytPlayer.getPlayerState();
-                    if (state !== YT.PlayerState.PLAYING) {
-                        ytPlayer.playVideo();
-                        playing = true;
-                        setPlayState(true);
-                    }
-                } catch (_) {}
-            }, 500);
-        }
+    if (!ytReady || !ytPlayer || !playing) return;
+    if (!document.hidden) {
+        setTimeout(() => {
+            try {
+                const state = ytPlayer.getPlayerState && ytPlayer.getPlayerState();
+                if (state !== YT.PlayerState.PLAYING) {
+                    ytPlayer.playVideo();
+                }
+            } catch (_) {}
+        }, 600);
     }
 });
 
