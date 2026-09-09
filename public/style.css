@@ -2060,17 +2060,14 @@ svg {
 
     .mobile-volume {
         display: flex;
-        position: absolute;
-        left: 50%;
-        bottom: calc(100% + 8px);
-        transform: translateX(-50%);
+        position: relative;
         color: var(--soft);
     }
 
     .mobile-volume input {
         position: absolute;
         left: 50%;
-        bottom: calc(100% + 60px);
+        bottom: calc(100% + 10px);
         width: 112px;
         max-width: none;
         transform: translateX(-50%) rotate(-90deg);
