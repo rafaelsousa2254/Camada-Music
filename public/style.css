@@ -1987,14 +1987,13 @@ svg {
     }
 
     .now-playing {
-        max-width: none;
+        max-width: calc(100vw - 80px);
         min-width: 0;
-        overflow: hidden;
     }
 
     .now-playing strong,
     .now-playing small {
-        max-width: 200px;
+        max-width: 140px;
     }
 
     .now-playing {
