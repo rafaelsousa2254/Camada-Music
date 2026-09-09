@@ -842,6 +842,9 @@ function setPlayState(isPlaying) {
         button.classList.toggle("is-playing", isPlaying);
         button.setAttribute("aria-label", isPlaying ? "Pausar" : "Tocar");
     });
+    if ("mediaSession" in navigator) {
+        navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
+    }
 }
 
 function renderPlayer() {
@@ -878,6 +881,22 @@ function renderPlayer() {
     setPlayState(playing);
     renderFavButtons(track);
     renderQueue();
+    updateMediaSession(track);
+}
+
+function updateMediaSession(track) {
+    if (!("mediaSession" in navigator)) return;
+    const artwork = track && track.image ? [{ src: track.image, sizes: "256x256", type: "image/jpeg" }] : [];
+    navigator.mediaSession.metadata = new MediaMetadata({
+        title: track ? track.title : "CamadaPlay",
+        artist: track ? track.artist : "",
+        album: "CamadaPlay",
+        artwork
+    });
+    navigator.mediaSession.setActionHandler("play", () => { if (ytPlayer && ytReady) { ytPlayer.playVideo(); playing = true; setPlayState(true); }});
+    navigator.mediaSession.setActionHandler("pause", () => { if (ytPlayer && ytReady) { ytPlayer.pauseVideo(); playing = false; setPlayState(false); }});
+    navigator.mediaSession.setActionHandler("previoustrack", () => loadTrack(currentTrack - 1, true));
+    navigator.mediaSession.setActionHandler("nexttrack", () => playNextTrack());
 }
 
 // ===== REPRODUÇÃO =====

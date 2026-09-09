@@ -1,4 +1,4 @@
-const CACHE_NAME = "camadaplay-v2";
+const CACHE_NAME = "camadaplay-v3";
 const PRECACHE = ["/", "/CamadaPlay.html", "/style.css", "/script.js", "/manifest.json", "/assets/icon-192.svg", "/assets/icon-512.svg"];
 
 self.addEventListener("install", (event) => {
