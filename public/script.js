@@ -879,8 +879,10 @@ function renderPlayer() {
     playerArtist.textContent = track.artist;
     sideTitle.textContent = track.title;
     sideArtist.textContent = track.artist;
-    sideDurationTime.textContent = formatTime(currentDuration || track.durationSeconds);
-    mobileDurationTime.textContent = formatTime(currentDuration || track.durationSeconds);
+    if (!playing) {
+        sideDurationTime.textContent = formatTime(currentDuration || track.durationSeconds);
+        mobileDurationTime.textContent = formatTime(currentDuration || track.durationSeconds);
+    }
     setCoverImage(playerCover, track);
     setCoverImage(sideCover, track);
     heroCover.innerHTML = track.image ? `<img src="${escapeHtml(track.image)}" alt="">` : '';
