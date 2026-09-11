@@ -805,11 +805,11 @@ function renderCards(list) {
 }
 
 function getQueueSlice() {
-    const current = tracks[currentTrack];
-    return displayList.map((track, index) => ({
+    if (!tracks.length || currentTrack < 0 || currentTrack >= tracks.length) return [];
+    return tracks.slice(currentTrack).map((track, i) => ({
         track,
-        index,
-        active: Boolean(current && track.id === current.id)
+        index: currentTrack + i,
+        active: i === 0
     }));
 }
 

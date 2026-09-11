@@ -957,10 +957,13 @@ svg {
 
 /* ===== CONTEUDO PRINCIPAL ===== */
 .content {
+    position: relative;
+    z-index: 1;
     min-width: 0;
     height: 100%;
     min-height: 0;
     padding: 21px 28px 28px;
+    overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
 }
@@ -971,6 +974,7 @@ svg {
     gap: 18px;
     margin-bottom: 22px;
     position: relative;
+    min-width: 0;
 }
 
 .history-buttons {
@@ -1004,6 +1008,7 @@ svg {
     align-items: center;
     gap: 12px;
     flex: 1;
+    min-width: 0;
     max-width: 480px;
     height: 49px;
     border-radius: 999px;
@@ -1036,7 +1041,8 @@ svg {
     align-items: center;
     gap: 12px;
     margin-left: auto;
-    flex-shrink: 0;
+    flex-shrink: 1;
+    min-width: 0;
 }
 
 .profile {
@@ -1051,6 +1057,7 @@ svg {
     font-weight: 800;
     box-shadow: 0 0 18px rgba(var(--accent-rgb), .45);
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 .profile img {
@@ -1083,6 +1090,8 @@ svg {
     background: rgba(2, 10, 26, .42);
     color: var(--soft);
     box-shadow: inset 0 0 18px rgba(var(--accent-rgb), .08);
+    min-width: 0;
+    flex-shrink: 1;
 }
 
 .theme-picker span {
@@ -1119,6 +1128,8 @@ svg {
     background: linear-gradient(135deg, rgba(var(--accent-rgb), .16), rgba(2, 10, 26, .42));
     box-shadow: 0 10px 26px rgba(0, 0, 0, .18);
     color: var(--text);
+    min-width: 0;
+    flex-shrink: 1;
 }
 
 .visitor-stats svg {
