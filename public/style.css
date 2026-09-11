@@ -54,6 +54,32 @@ body[data-theme="sakura"] {
     --page-bg: linear-gradient(135deg, #2a071b, #ff8fbd 48%, #ffd3e4);
 }
 
+body[data-theme="solo-leveling"] {
+    --bg: #080210;
+    --panel: rgba(15, 5, 28, .92);
+    --panel-strong: rgba(25, 7, 46, .97);
+    --line: rgba(150, 69, 255, .34);
+    --line-strong: rgba(183, 96, 255, .86);
+    --text: #faf5ff;
+    --muted: #c7a9e8;
+    --soft: #eadcff;
+    --blue: #8b35ff;
+    --blue-soft: #ff2a76;
+    --blue-dark: #2b0d54;
+    --accent-rgb: 139, 53, 255;
+    --accent-2: #ff2a76;
+    --hero-image: url("assets/themes/foto_solo_leveling.png");
+    --hero-person-image: url("assets/themes/foto_solo_leveling.png");
+    --hero-position: 50% center;
+    --hero-person-position: 50% center;
+    --hero-overlay: linear-gradient(90deg, rgba(7, 2, 14, .95), rgba(62, 17, 112, .5) 44%, rgba(255, 42, 118, .1));
+    --hero-glow: radial-gradient(circle at 62% 45%, rgba(142, 47, 255, .62), transparent 36%);
+    --page-bg:
+        radial-gradient(circle at 80% 10%, rgba(255, 42, 118, .16), transparent 27%),
+        radial-gradient(circle at 22% 18%, rgba(139, 53, 255, .34), transparent 32%),
+        linear-gradient(135deg, #030107, #160728 52%, #07010f);
+}
+
 body[data-theme="hacker"] {
     --bg: #00120b;
     --panel: rgba(0, 19, 12, .9);
@@ -359,6 +385,32 @@ body[data-theme="megumin-konosuba"] {
         linear-gradient(135deg, #090202, #3a0808 52%, #1d0b25);
 }
 
+body[data-theme="meliodas"] {
+    --bg: #120a03;
+    --panel: rgba(31, 19, 7, .92);
+    --panel-strong: rgba(50, 31, 10, .97);
+    --line: rgba(245, 185, 74, .34);
+    --line-strong: rgba(255, 215, 107, .86);
+    --text: #fff8e8;
+    --muted: #e9c98c;
+    --soft: #ffe7a8;
+    --blue: #f4b846;
+    --blue-soft: #d236ff;
+    --blue-dark: #4f3009;
+    --accent-rgb: 244, 184, 70;
+    --accent-2: #d236ff;
+    --hero-image: url("assets/themes/foto_meliodas.png");
+    --hero-person-image: url("assets/themes/foto_meliodas.png");
+    --hero-position: 50% 34%;
+    --hero-person-position: 50% 34%;
+    --hero-overlay: linear-gradient(90deg, rgba(19, 11, 2, .93), rgba(83, 48, 10, .5) 45%, rgba(168, 29, 202, .14));
+    --hero-glow: radial-gradient(circle at 52% 36%, rgba(255, 211, 93, .58), transparent 35%);
+    --page-bg:
+        radial-gradient(circle at 78% 12%, rgba(213, 54, 255, .2), transparent 28%),
+        radial-gradient(circle at 24% 16%, rgba(255, 206, 82, .28), transparent 30%),
+        linear-gradient(135deg, #090501, #2d1a05 52%, #240529);
+}
+
 body[data-theme="hello-kitty-kuromi"] {
     --bg: #160711;
     --panel: rgba(31, 10, 25, .92);
@@ -488,6 +540,32 @@ body[data-theme="frieren"] {
     --hero-overlay: linear-gradient(90deg, rgba(22, 54, 63, .84), rgba(82, 154, 170, .26) 46%, rgba(255, 255, 255, .08));
     --hero-glow: radial-gradient(circle at 70% 22%, rgba(204, 237, 245, .58), transparent 36%);
     --page-bg: linear-gradient(135deg, #0f2630, #4b8790 50%, #c5dba5);
+}
+
+body[data-theme="goku"] {
+    --bg: #030714;
+    --panel: rgba(5, 13, 31, .91);
+    --panel-strong: rgba(8, 18, 43, .97);
+    --line: rgba(82, 161, 255, .34);
+    --line-strong: rgba(255, 118, 36, .82);
+    --text: #f7fbff;
+    --muted: #aec7ea;
+    --soft: #ffe0bf;
+    --blue: #3d8dff;
+    --blue-soft: #ff7a24;
+    --blue-dark: #081e54;
+    --accent-rgb: 61, 141, 255;
+    --accent-2: #ff7a24;
+    --hero-image: url("assets/themes/foto_goku.png");
+    --hero-person-image: url("assets/themes/foto_goku.png");
+    --hero-position: 50% 42%;
+    --hero-person-position: 50% 42%;
+    --hero-overlay: linear-gradient(90deg, rgba(3, 8, 22, .94), rgba(9, 48, 112, .46) 42%, rgba(255, 122, 36, .14));
+    --hero-glow: radial-gradient(circle at 54% 52%, rgba(83, 171, 255, .55), transparent 36%);
+    --page-bg:
+        radial-gradient(circle at 76% 9%, rgba(255, 122, 36, .22), transparent 26%),
+        radial-gradient(circle at 22% 18%, rgba(66, 153, 255, .32), transparent 30%),
+        linear-gradient(135deg, #02040c, #071331 54%, #1b0710);
 }
 
 body[data-theme="suzuki"] {

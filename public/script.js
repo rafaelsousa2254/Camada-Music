@@ -57,7 +57,7 @@ const VOLUME_KEY = "camadaplay:volume_v1";
 const PLAYLISTS_KEY = "camadaplay:playlists_v1";
 const DEFAULT_VOLUME = 100;
 const COVER_CLASSES = ["cover-one", "cover-two", "cover-three", "cover-four"];
-const THEMES = new Set(["default", "anos80", "anya-forger", "ashley-graves", "asta", "coco-atelier", "cyberpunk", "demon-slayer", "frieren", "hacker", "hello-kitty", "hello-kitty-kuromi", "hello-kitty-my-melody", "japao", "kaguya-sama", "komi-san", "megumin-konosuba", "naruto", "rikka-takanashi", "sakura", "sono-bisque-doll", "suzuki", "vanellope"]);
+const THEMES = new Set(["default", "anos80", "anya-forger", "ashley-graves", "asta", "coco-atelier", "cyberpunk", "demon-slayer", "frieren", "goku", "hacker", "hello-kitty", "hello-kitty-kuromi", "hello-kitty-my-melody", "japao", "kaguya-sama", "komi-san", "megumin-konosuba", "meliodas", "naruto", "rikka-takanashi", "sakura", "solo-leveling", "sono-bisque-doll", "suzuki", "vanellope"]);
 const CATEGORY_KEYWORDS = [
     { name: "funk brasileiro", terms: ["funk", "funk brasileiro", "mc ", "dj ", "mandela", "automotivo", "tamborzao", "brega funk"] },
     { name: "sertanejo", terms: ["sertanejo", "arrocha", "modao", "sofrencia", "ana castela", "gusttavo lima", "luan santana", "henrique", "juliano", "jorge e mateus"] },
