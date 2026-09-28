@@ -3114,3 +3114,247 @@ body.playstation-mode .context-menu-item:focus-visible {
     stroke-linecap: round;
     stroke-linejoin: round;
 }
+
+/* ============================================================================
+   ===== MODO TV (navegador de Smart TV) =====
+   Regras aplicadas SOMENTE quando o <html> tem a classe .tv-mode, que e
+   adicionada por deteccao de UA no <head> do CamadaPlay.html.
+   Em PC e celular a classe nao existe e nada abaixo e aplicado.
+   ============================================================================ */
+
+/* --- Base do modo TV --- */
+.tv-mode {
+    font-size: 18px;
+}
+
+/* --- Layout: corrige sobreposicao do painel direito e grid da TV --- */
+.tv-mode .app {
+    grid-template-columns: 230px minmax(0, 1fr) 0px;
+    transition: none;
+}
+
+.tv-mode .app.panel-open {
+    grid-template-columns: 230px minmax(0, 1fr) 340px;
+}
+
+.tv-mode .right-panel {
+    min-width: 0;
+}
+
+.tv-mode .player {
+    grid-template-columns: 250px minmax(0, 1fr) 320px;
+    gap: 14px;
+    padding: 8px 16px;
+}
+
+/* --- Fundos solidos: color-mix nao existe em navegadores de TV antigos
+       (sem fallback o fundo fica transparente e tudo parece sobreposto) --- */
+.tv-mode .sidebar {
+    background: var(--panel-strong);
+}
+
+.tv-mode .search {
+    background: var(--panel-strong);
+}
+
+.tv-mode .side-player {
+    background: var(--panel-strong);
+}
+
+.tv-mode .player {
+    background: var(--panel-strong);
+}
+
+.tv-mode .queue {
+    background: var(--panel-strong);
+}
+
+.tv-mode .mix-card {
+    background: var(--panel-strong);
+}
+
+.tv-mode .empty-state {
+    background: var(--panel-strong);
+}
+
+.tv-mode .lyrics-panel {
+    background: var(--panel-strong);
+}
+
+.tv-mode .history-buttons button,
+.tv-mode .round-action,
+.tv-mode .icon-button {
+    background: var(--panel-strong);
+}
+
+.tv-mode .auth-modal {
+    background: rgba(2, 8, 21, .92);
+}
+
+.tv-mode .auth-field input {
+    background: var(--panel-strong);
+}
+
+.tv-mode .context-menu {
+    background: var(--panel-strong);
+}
+
+.tv-mode .right-panel-bg::after {
+    background: rgba(3, 10, 26, .55);
+}
+
+/* --- Desliga blur de GPU pesado (trava a TV) --- */
+.tv-mode *,
+.tv-mode *::before,
+.tv-mode *::after {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+
+/* --- Foco visivel para navegacao por controle remoto (D-pad) --- */
+.tv-mode button:focus,
+.tv-mode a:focus,
+.tv-mode input:focus,
+.tv-mode select:focus,
+.tv-mode [tabindex]:focus {
+    outline: 3px solid rgba(var(--accent-rgb), .95) !important;
+    outline-offset: 2px;
+}
+
+/* --- Alvos maiores no menu lateral --- */
+.tv-mode .menu-item {
+    min-height: 46px;
+    gap: 14px;
+    font-size: .95rem;
+}
+
+.tv-mode .playlist-item {
+    min-height: 42px;
+    font-size: .88rem;
+}
+
+/* --- Esconde o botao/modal "App para TV" dentro da propria TV
+       (nao da pra baixar APK no navegador da TV; o href="#" recarregava a pagina) --- */
+.tv-mode .tv-download-btn,
+.tv-mode .tv-modal {
+    display: none !important;
+}
+
+/* --- Temas: dropdown custom (substitui o <select> nativo que nao abre na TV) --- */
+.tv-mode .theme-picker select {
+    display: none !important;
+}
+
+.tv-mode .tv-theme-btn {
+    min-width: 120px;
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid rgba(var(--accent-rgb), .5);
+    border-radius: 6px;
+    background: rgba(var(--accent-rgb), .16);
+    color: var(--text);
+    font: inherit;
+    font-size: .82rem;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+}
+
+.tv-mode .tv-theme-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1100;
+    background: rgba(0, 0, 0, .78);
+    align-items: center;
+    justify-content: center;
+}
+
+.tv-mode .tv-theme-overlay.open {
+    display: flex;
+}
+
+.tv-mode .tv-theme-list {
+    width: 90%;
+    max-width: 560px;
+    max-height: 76vh;
+    overflow-y: auto;
+    background: var(--panel-strong);
+    border: 1px solid rgba(var(--accent-rgb), .45);
+    border-radius: 12px;
+    padding: 14px;
+    display: grid;
+    gap: 8px;
+}
+
+.tv-mode .tv-theme-option {
+    min-height: 52px;
+    padding: 0 16px;
+    text-align: left;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, .25);
+    color: var(--text);
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.tv-mode .tv-theme-option.selected {
+    border-color: rgba(var(--accent-rgb), .9);
+    background: rgba(var(--accent-rgb), .2);
+    color: var(--blue-soft);
+}
+
+/* --- Teclado na tela (o navegador da TV nao mostra o teclado nativo) --- */
+.tv-mode .tv-kb {
+    display: none;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1200;
+    background: rgba(3, 10, 26, .97);
+    border-top: 2px solid rgba(var(--accent-rgb), .55);
+    padding: 12px 14px 16px;
+}
+
+.tv-mode .tv-kb.open {
+    display: block;
+}
+
+.tv-mode .tv-kb-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+}
+
+.tv-mode .tv-kb-key {
+    min-width: 54px;
+    height: 50px;
+    padding: 0 12px;
+    margin: 4px;
+    border: 1px solid rgba(var(--accent-rgb), .45);
+    border-radius: 8px;
+    background: var(--panel-strong);
+    color: var(--text);
+    font: inherit;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.tv-mode .tv-kb-key-wide {
+    min-width: 130px;
+}
+
+.tv-mode .tv-kb-key.confirm {
+    background: rgba(var(--accent-rgb), .85);
+    border-color: rgba(var(--accent-rgb), .95);
+    color: #fff;
+}

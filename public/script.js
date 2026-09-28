@@ -81,6 +81,10 @@ if (IS_PLAYSTATION) {
     document.body.classList.add("playstation-mode");
 }
 
+// Modo TV: ativado apenas quando o <html> tem a classe .tv-mode (UA de navegador de Smart TV).
+// Em PC e celular esta constante e false e nada do que e condicionado a ela executa.
+const TV_MODE = document.documentElement.classList.contains("tv-mode");
+
 let displayList = [];
 let tracks = [];
 let currentTrack = 0;
@@ -127,7 +131,25 @@ function migrateStorageToCurrentProfile() {
 }
 
 function getSavedProfileVolume() {
-    if (!currentUser || !currentUser.username) return null;
+    if (!currentUser || !currentUser.username) {
+        // Modo TV: guarda e le o volume do visitante (chave ":guest") para a
+        // troca de musica nao jogar o volume de volta para o maximo.
+        if (!TV_MODE) return null;
+
+        const guestRaw = localStorage.getItem(scopedStorageKey(VOLUME_KEY));
+        if (guestRaw !== null) {
+            const guestNum = Number(guestRaw);
+            if (Number.isFinite(guestNum)) return Math.max(0, Math.min(100, guestNum));
+            return null;
+        }
+
+        // Sem volume salvo: mantem o volume atual do player.
+        if (ytReady && ytPlayer && typeof ytPlayer.getVolume === "function") {
+            const current = Number(ytPlayer.getVolume());
+            if (Number.isFinite(current)) return Math.max(0, Math.min(100, current));
+        }
+        return null;
+    }
 
     const saved = Number(localStorage.getItem(scopedStorageKey(VOLUME_KEY)));
     if (!Number.isFinite(saved)) return null;
@@ -153,7 +175,7 @@ function applyProfileVolume() {
 }
 
 function saveProfileVolume(volume) {
-    if (!currentUser || !currentUser.username) return;
+    if ((!currentUser || !currentUser.username) && !TV_MODE) return;
     localStorage.setItem(scopedStorageKey(VOLUME_KEY), String(Math.max(0, Math.min(100, Number(volume) || 0))));
 }
 
@@ -306,6 +328,7 @@ function onYTStateChange(event) {
     } else if (playerState === YT.PlayerState.PLAYING) {
         playing = true;
         setPlayState(true);
+        if (TV_MODE) applyProfileVolume();
         const track = tracks[currentTrack];
         if (track) {
             embedHeroVideo(track.id);
@@ -699,6 +722,18 @@ function embedHeroVideo(videoId, startAt = null) {
         return;
     }
 
+    // Modo TV: nao embute videos de fundo. Na TV isso mantem 3 players do
+    // YouTube rodando ao mesmo tempo e deixa o site pesado/travado.
+    // A capa estatica (heroCover) continua sendo exibida.
+    if (TV_MODE) {
+        heroVideo.innerHTML = '';
+        heroVideo.style.display = 'none';
+        heroCover.style.opacity = '';
+        if (rightBg) rightBg.innerHTML = '';
+        heroVideoId = null;
+        return;
+    }
+
     if (!videoId) {
         heroVideo.innerHTML = '';
         heroVideo.style.display = 'none';
@@ -734,6 +769,7 @@ function embedHeroVideo(videoId, startAt = null) {
 }
 
 function sendHeroVideoCommand(func, args = []) {
+    if (TV_MODE) return;
     [heroVideo, document.getElementById('rightPanelBg')].forEach((container) => {
         if (!container) return;
         container.querySelectorAll('iframe').forEach((iframe) => {
@@ -747,7 +783,7 @@ function sendHeroVideoCommand(func, args = []) {
 }
 
 function syncHeroVideoPlayback(shouldPlay) {
-    if (IS_PLAYSTATION) return;
+    if (TV_MODE || IS_PLAYSTATION) return;
     const current = ytReady && ytPlayer ? ytPlayer.getCurrentTime() || 0 : 0;
     sendHeroVideoCommand('seekTo', [current, true]);
     sendHeroVideoCommand(shouldPlay ? 'playVideo' : 'pauseVideo');
@@ -2342,3 +2378,225 @@ if (tvDownloadBtn && tvModal) {
 }
 
 setupTvButton();
+
+// ============================================================================
+// ===== MODO TV (navegador de Smart TV) =====
+// Tudo abaixo so executa quando TV_MODE e true (classe .tv-mode no <html>).
+// Em PC e celular TV_MODE e false e nenhum codigo roda.
+// ============================================================================
+if (TV_MODE) {
+    // ----- Fallback de eventos para navegadores antigos de TV -----
+    function tvDispatch(el, type) {
+        let ev;
+        try {
+            ev = new Event(type, { bubbles: true, cancelable: true });
+        } catch (e) {
+            ev = document.createEvent("Event");
+            ev.initEvent(type, true, true);
+        }
+        el.dispatchEvent(ev);
+    }
+
+    // ---------------------------------------------------------------
+    // 1) TEMAS: dropdown custom (o <select> nativo nao abre na TV)
+    // ---------------------------------------------------------------
+    if (themeSelect) {
+        (function () {
+            const picker = themeSelect.parentNode;
+
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "tv-theme-btn";
+            btn.id = "tvThemeBtn";
+            picker.appendChild(btn);
+
+            function currentLabel() {
+                const opt = themeSelect.options[themeSelect.selectedIndex];
+                return opt ? opt.textContent : "Padrão";
+            }
+            function syncLabel() {
+                btn.textContent = currentLabel();
+            }
+            syncLabel();
+            themeSelect.addEventListener("change", syncLabel);
+
+            // Clique em qualquer parte do rotulo "Tema" (fora do botao) abre a lista
+            picker.addEventListener("click", function (event) {
+                if (event.target !== btn) btn.click();
+            });
+
+            const overlay = document.createElement("div");
+            overlay.className = "tv-theme-overlay";
+            overlay.id = "tvThemeOverlay";
+
+            const list = document.createElement("div");
+            list.className = "tv-theme-list";
+
+            for (let i = 0; i < themeSelect.options.length; i++) {
+                const opt = themeSelect.options[i];
+                const item = document.createElement("button");
+                item.type = "button";
+                item.className = "tv-theme-option";
+                item.setAttribute("data-theme", opt.value);
+                item.textContent = opt.textContent;
+                item.addEventListener("click", function () {
+                    applyTheme(opt.value);
+                    syncLabel();
+                    overlay.classList.remove("open");
+                    btn.focus();
+                });
+                list.appendChild(item);
+            }
+
+            overlay.appendChild(list);
+            document.body.appendChild(overlay);
+
+            function markSelected() {
+                const items = list.querySelectorAll(".tv-theme-option");
+                for (let i = 0; i < items.length; i++) {
+                    const isCurrent = items[i].getAttribute("data-theme") === (themeSelect.value || "default");
+                    items[i].classList.toggle("selected", isCurrent);
+                }
+            }
+
+            btn.addEventListener("click", function (event) {
+                event.stopPropagation();
+                markSelected();
+                overlay.classList.add("open");
+                const sel = list.querySelector(".tv-theme-option.selected") || list.querySelector(".tv-theme-option");
+                if (sel) sel.focus();
+            });
+
+            overlay.addEventListener("click", function (event) {
+                if (event.target === overlay) {
+                    overlay.classList.remove("open");
+                    btn.focus();
+                }
+            });
+
+            overlay.addEventListener("keydown", function (event) {
+                if (event.key === "Escape" || event.keyCode === 27) {
+                    overlay.classList.remove("open");
+                    btn.focus();
+                }
+            });
+        })();
+    }
+
+    // ---------------------------------------------------------------
+    // 2) TECLADO NA TELA (o navegador da TV nao mostra teclado nativo)
+    // ---------------------------------------------------------------
+    (function () {
+        let target = null;
+
+        const kb = document.createElement("div");
+        kb.className = "tv-kb";
+        kb.id = "tvKeyboard";
+
+        const rowsWrap = document.createElement("div");
+        rowsWrap.className = "tv-kb-rows";
+
+        const keyRows = [
+            ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+            ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
+            ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
+            ["z", "x", "c", "v", "b", "n", "m", "-", ".", ","],
+            ["á", "à", "ã", "ç", "é", "ê", "í", "ó", "ô", "õ", "ú", "ü"]
+        ];
+
+        function makeKey(label, extraClass, handler) {
+            const key = document.createElement("button");
+            key.type = "button";
+            key.className = "tv-kb-key" + (extraClass ? " " + extraClass : "");
+            key.textContent = label;
+            key.addEventListener("click", handler);
+            return key;
+        }
+
+        function insertChar(ch) {
+            if (!target) return;
+            target.value = String(target.value || "") + ch;
+            tvDispatch(target, "input");
+        }
+
+        function backspaceChar() {
+            if (!target) return;
+            target.value = String(target.value || "").slice(0, -1);
+            tvDispatch(target, "input");
+        }
+
+        function closeKb() {
+            kb.classList.remove("open");
+            target = null;
+        }
+
+        const confirmKey = makeKey("Buscar", "tv-kb-key-wide confirm", function () {
+            if (!target) return;
+            const el = target;
+            const form = el.form;
+            closeKb();
+            if (form) {
+                tvDispatch(form, "submit");
+            }
+            if (el.blur) el.blur();
+        });
+
+        keyRows.forEach(function (row) {
+            const rowEl = document.createElement("div");
+            rowEl.className = "tv-kb-row";
+            row.forEach(function (ch) {
+                rowEl.appendChild(makeKey(ch, "", function () { insertChar(ch); }));
+            });
+            rowsWrap.appendChild(rowEl);
+        });
+
+        const actionsRow = document.createElement("div");
+        actionsRow.className = "tv-kb-row";
+        actionsRow.appendChild(makeKey("Espaço", "tv-kb-key-wide", function () { insertChar(" "); }));
+        actionsRow.appendChild(makeKey("Apagar", "tv-kb-key-wide", backspaceChar));
+        actionsRow.appendChild(confirmKey);
+        actionsRow.appendChild(makeKey("Fechar", "tv-kb-key-wide", closeKb));
+        rowsWrap.appendChild(actionsRow);
+
+        kb.appendChild(rowsWrap);
+        document.body.appendChild(kb);
+
+        function openKb(el) {
+            target = el;
+            confirmKey.textContent = (el.form === searchForm) ? "Buscar" : "OK";
+            kb.classList.add("open");
+        }
+
+        // Suprime o teclado nativo e abre o nosso ao focar qualquer campo de texto
+        const tvTextInputs = [];
+        const inputs = document.querySelectorAll('input[type="search"], .auth-field input');
+        for (let i = 0; i < inputs.length; i++) {
+            (function (inp) {
+                tvTextInputs.push(inp);
+                inp.setAttribute("inputmode", "none");
+                inp.readOnly = true;
+                inp.addEventListener("focus", function () { openKb(inp); });
+            })(inputs[i]);
+        }
+
+        function isTvTextInput(node) {
+            for (let i = 0; i < tvTextInputs.length; i++) {
+                if (tvTextInputs[i] === node) return true;
+            }
+            return false;
+        }
+
+        // Fecha o teclado ao clicar em qualquer outro lugar que nao seja
+        // o proprio teclado ou um campo de texto
+        document.addEventListener("click", function (event) {
+            if (!kb.classList.contains("open")) return;
+            let node = event.target;
+            if (kb.contains(node)) return;
+            while (node) {
+                if (isTvTextInput(node)) return;
+                node = node.parentNode;
+            }
+            closeKb();
+        });
+    })();
+}

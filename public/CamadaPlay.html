@@ -4,11 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CamadaPlay</title>
+    <script>
+        (function () {
+            try {
+                var ua = navigator.userAgent || "";
+                if (/(SmartTV|SMART-TV|Web0S|WebOS|Tizen|HbbTV|NetCast|VIERA|BRAVIA|Roku|FireTV|Fire TV|Android TV|AppleTV|Apple TV|Vidaa|Aquos|GoogleTV|Hisense|Konka|\bAFT[A-Z0-9]{2,}\b)/i.test(ua)) {
+                    document.documentElement.className += " tv-mode";
+                }
+            } catch (e) {}
+        })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="assets/icon-192.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?t=1725650011">
+    <link rel="stylesheet" href="style.css?t=1759080000">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0d7cff">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -443,7 +453,7 @@
         };
     </script>
     <script src="https://www.youtube.com/iframe_api"></script>
-    <script src="script.js?v=13"></script>
+    <script src="script.js?v=14"></script>
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/service-worker.js').then((reg) => {

@@ -9,3 +9,10 @@ abrir_camadaplay.bat
 .DS_Store
 Thumbs.db
 *.apk
+
+#lixo local
+*-DESKTOP-UVHOK4R*
+.build-tools/
+android/.gradle/
+android/local.properties
+.counters.json
