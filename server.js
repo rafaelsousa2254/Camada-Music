@@ -29,7 +29,7 @@ function getDataFile(name) {
     return target;
 }
 
-// ===== yt-dlp =====
+
 function findYtDlp() {
     if (process.env.YTDLP_PATH) return process.env.YTDLP_PATH;
     if (os.platform() === 'win32' && process.env.APPDATA) {
@@ -51,7 +51,7 @@ function findYtDlp() {
 }
 const YTDLP_PATH = findYtDlp();
 
-// ===== CACHE =====
+
 const CACHE_DIR = path.join(__dirname, '.cache');
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutos
 
@@ -82,7 +82,7 @@ function setCache(type, query, limit, results) {
     } catch {}
 }
 
-// ===== USUARIOS (JSON file) =====
+
 const USERS_FILE = getDataFile('.users.json');
 
 function loadUsers() {
@@ -135,7 +135,7 @@ function requireUser(req, res, username = null) {
     return session;
 }
 
-// ===== PLAYLISTS (JSON file) =====
+
 const PLAYLISTS_FILE = getDataFile('.playlists.json');
 
 function loadPlaylists() {
@@ -147,7 +147,7 @@ function savePlaylists(data) {
     fs.writeFileSync(PLAYLISTS_FILE, JSON.stringify(data, null, 2));
 }
 
-// ===== VISIT STATS =====
+
 const VISITORS_FILE = getDataFile('.visitors.json');
 const COUNTERS_FILE = getDataFile('.counters.json');
 const activeVisitors = new Map();
@@ -233,12 +233,12 @@ function getVisitStats() {
     };
 }
 
-// ===== MIDDLEWARE =====
+
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ===== APK DOWNLOAD =====
+
 app.get('/camadaplay-tv.apk', (req, res) => {
     const apkPath = path.join(__dirname, 'apks', 'camadaplay-tv.apk');
     if (!fs.existsSync(apkPath)) {
@@ -308,7 +308,7 @@ app.get('/api/stats', (req, res) => {
     res.json(getVisitStats());
 });
 
-// ===== YT-DLP SEARCH =====
+
 function ytDlpSearch(query, limit = 12) {
     return new Promise((resolve, reject) => {
         const cached = getCache('search', query, limit);
@@ -353,7 +353,7 @@ function ytDlpSearch(query, limit = 12) {
     });
 }
 
-// ===== AUTH ROUTES =====
+
 app.post('/api/auth/register', async (req, res) => {
     const { username, password } = req.body;
 
@@ -405,7 +405,7 @@ app.put('/api/auth/profile', (req, res) => {
     res.json({ username: session.username, photo: session.users[session.username].photo });
 });
 
-// ===== PLAYLIST ROUTES =====
+
 app.get('/api/playlists/:username', (req, res) => {
     const session = requireUser(req, res, req.params.username);
     if (!session) return;
@@ -467,7 +467,7 @@ app.put('/api/playlists/:username/:playlistId', (req, res) => {
     res.json({ playlist });
 });
 
-// ===== AUDIO STREAM (mobile background playback) =====
+
 const audioStreamCache = new Map();
 
 function proxyAudio(audioUrl, req, res) {
@@ -531,7 +531,7 @@ app.get('/api/stream/:videoId', (req, res) => {
     });
 });
 
-// ===== SEARCH =====
+
 app.get('/api/search', async (req, res) => {
     const query = req.query.q;
     const limit = parseInt(req.query.limit, 10) || 12;
@@ -552,7 +552,7 @@ app.get('/api/search', async (req, res) => {
     }
 });
 
-// ===== RECOMMENDATIONS =====
+
 app.get('/api/recommend', async (req, res) => {
     const artists = req.query.artists;
     const titles = req.query.titles;
@@ -658,7 +658,7 @@ app.get('/api/recommend', async (req, res) => {
     }
 });
 
-// ===== START =====
+
 app.listen(PORT, () => {
     console.log(`\n========================================`);
     console.log(`  CamadaPlay rodando em http://localhost:${PORT}`);
