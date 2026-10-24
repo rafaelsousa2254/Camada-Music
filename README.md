@@ -18,7 +18,7 @@ O CamadaPlay é um player de música web que permite buscar músicas do YouTube,
 - bcrypt (hash de senhas)
 - CORS, dotenv
 
-## Como Rodar Localmente
+# Como Rodar Localmente
 
 ```bash
 # 1. Instalar dependências
