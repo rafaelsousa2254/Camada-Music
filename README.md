@@ -26,7 +26,7 @@ O CamadaPlay é um player de música web que permite buscar músicas do YouTube,
 
  2. Configurar variáveis de ambiente
   Copie o .env e ajuste se necessário
-  cp .env.example .env  # (se existir) ou edite .manual
+  cp .env.example .env  (se existir) ou edite .manual
 
  3. Certifique-se de que o yt-dlp está disponível:
    No Windows: pode ser baixado de https://github.com/yt-dlp/yt-dlp/releases
