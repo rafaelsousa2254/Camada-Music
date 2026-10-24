@@ -1,6 +1,6 @@
 # CamadaPlay - Player de Música
 
-# Descrição
+ Descrição
 O CamadaPlay é um player de música web que permite buscar músicas do YouTube, criar e gerenciar playlists, e ouvir áudio em background. A aplicação foi construída com Node.js e Express, usando yt-dlp para busca e streaming de áudio.
 
 ## Funcionalidades
