@@ -21,22 +21,22 @@ O CamadaPlay é um player de música web que permite buscar músicas do YouTube,
 ## Como Rodar Localmente
 
 ```bash
-# 1. Instalar dependências
+ 1. Instalar dependências
 npm install
 
-# 2. Configurar variáveis de ambiente
-# Copie o .env e ajuste se necessário
+ 2. Configurar variáveis de ambiente
+ Copie o .env e ajuste se necessário
 cp .env.example .env  # (se existir) ou edite .manual
 
-# 3. Certifique-se de que o yt-dlp está disponível:
-# - No Windows: pode ser baixado de https://github.com/yt-dlp/yt-dlp/releases
-# - Ou configure YTDLP_PATH no .env
+ 3. Certifique-se de que o yt-dlp está disponível:
+ - No Windows: pode ser baixado de https://github.com/yt-dlp/yt-dlp/releases
+ - Ou configure YTDLP_PATH no .env
 
-# 4. Iniciar o servidor
+ 4. Iniciar o servidor
 npm start
-# ou: node server.js
+ ou: node server.js
 
-# O servidor rodará em http://localhost:3000
+ O servidor rodará em http://localhost:3000
 ```
 
 ## Variáveis de Ambiente
